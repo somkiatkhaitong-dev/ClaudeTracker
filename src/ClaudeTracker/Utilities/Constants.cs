@@ -6,6 +6,14 @@ namespace ClaudeTracker.Utilities;
 /// <summary>Application-wide constants: API endpoints, intervals, thresholds, and paths.</summary>
 public static class Constants
 {
+    // Dev builds (-p:DevBuild=true) get their own identity so they can run
+    // side-by-side with the production build without sharing state.
+#if DEV_BUILD
+    private const string AppDirName = "ClaudeTracker-Dev";
+#else
+    private const string AppDirName = "ClaudeTracker";
+#endif
+
     public static class APIEndpoints
     {
         public const string ClaudeBase = "https://claude.ai/api";
@@ -84,7 +92,7 @@ public static class Constants
     public static class WebView2
     {
         public static string ProfilePath =>
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeTracker", "WebView2Profile");
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppDirName, "WebView2Profile");
     }
 
     public static class AutoStart
@@ -101,7 +109,7 @@ public static class Constants
 
     public static class Hooks
     {
-        public static string PipeName => $"ClaudeTracker-Hooks-{Environment.UserName}";
+        public static string PipeName => $"{AppDirName}-Hooks-{Environment.UserName}";
         public const int MaxConcurrentConnections = 10;
         public const int MaxMessageSize = 5 * 1024 * 1024; // 5 MB
         public const int ConnectionTimeoutMs = 3000;
@@ -228,7 +236,7 @@ public static class Constants
     }
 
     public static string AppDataPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeTracker");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppDirName);
 
     public static string SettingsFilePath =>
         Path.Combine(AppDataPath, "settings.json");
@@ -236,9 +244,13 @@ public static class Constants
     public static string LogFilePath =>
         Path.Combine(AppDataPath, "logs", "claudetracker-.log");
 
+#if DEV_BUILD
+    public const string DisplayName = "Claude Tracker (Dev)";
+    public const string MutexName = "ClaudeTracker-Dev-SingleInstance";
+#else
     public const string DisplayName = "Claude Tracker";
-
     public const string MutexName = "ClaudeTracker-SingleInstance";
+#endif
 
     public static string AppVersion =>
         System.Reflection.Assembly.GetExecutingAssembly()

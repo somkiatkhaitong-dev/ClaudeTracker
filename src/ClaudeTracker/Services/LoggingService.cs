@@ -18,7 +18,11 @@ public class LoggingService
             Directory.CreateDirectory(logDir);
 
         _logger = new LoggerConfiguration()
+#if DEV_BUILD
+            .MinimumLevel.Debug()
+#else
             .MinimumLevel.Information()
+#endif
             .WriteTo.File(
                 Constants.LogFilePath,
                 rollingInterval: RollingInterval.Day,
