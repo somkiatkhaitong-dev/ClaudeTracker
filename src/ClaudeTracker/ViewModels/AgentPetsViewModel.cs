@@ -9,15 +9,9 @@ namespace ClaudeTracker.ViewModels;
 /// so walk position and facing survive session updates.</summary>
 public partial class AgentPetsViewModel : ObservableObject
 {
-    private static readonly string[] AccentCycle =
-    {
-        "AccentBlue", "AccentMagenta", "AccentTeal", "AccentAmber",
-        "AccentCyan", "AccentGreen", "AccentPurple"
-    };
-
     private readonly ISessionTrackingService _sessionTracking;
     private readonly Random _random = new();
-    private int _nextColorIndex;
+    private int _nextSkinIndex;
 
     public ObservableCollection<AgentPetViewModel> Pets { get; } = new();
 
@@ -52,7 +46,7 @@ public partial class AgentPetsViewModel : ObservableObject
             {
                 pet = new AgentPetViewModel(session.SessionId)
                 {
-                    ColorToken = AccentCycle[_nextColorIndex++ % AccentCycle.Length],
+                    SkinId = PetSkins.All[_nextSkinIndex++ % PetSkins.All.Length].Id,
                     X = _random.NextDouble() * (Constants.Pets.WindowWidth - Constants.Pets.PetWidth),
                     FacingRight = _random.Next(2) == 0,
                     SpeedJitter = 0.8 + _random.NextDouble() * 0.4

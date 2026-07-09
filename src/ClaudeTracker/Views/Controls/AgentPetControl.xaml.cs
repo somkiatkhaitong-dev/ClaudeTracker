@@ -2,6 +2,9 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
+using ClaudeTracker.Models;
+using ClaudeTracker.Utilities;
 using ClaudeTracker.ViewModels;
 
 namespace ClaudeTracker.Views.Controls;
@@ -11,6 +14,8 @@ public partial class AgentPetControl : UserControl
     private const double WorkingOpacity = 1.0;
     private const double IdleOpacity = 0.82;
     private const double SleepingOpacity = 0.55;
+    private const double BoxWidth = 96;
+    private const double BoxHeight = 83;
 
     private readonly Storyboard _bob = new();
     private readonly Storyboard _babyBob = new();
@@ -18,6 +23,7 @@ public partial class AgentPetControl : UserControl
     private Storyboard[] AllStoryboards => new[] { _bob, _babyBob, _zzz };
 
     private AgentPetViewModel? _viewModel;
+    private PetSkin _skin = PetSkins.All[0];
     private bool _storyboardsBuilt;
 
     public AgentPetControl()
@@ -29,6 +35,7 @@ public partial class AgentPetControl : UserControl
             BuildStoryboards();
             if (_viewModel != null)
             {
+                ResolveSkin();
                 ApplyState(_viewModel.State);
                 SetFacing(_viewModel.FacingRight);
                 UpdateSubagentVisuals(_viewModel.SubagentCount);
@@ -43,8 +50,30 @@ public partial class AgentPetControl : UserControl
 
         _viewModel = e.NewValue as AgentPetViewModel;
         if (_viewModel != null)
+        {
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            ResolveSkin();
+        }
     }
+
+    private void ResolveSkin()
+    {
+        if (_viewModel == null) return;
+        _skin = Array.Find(PetSkins.All, s => s.Id == _viewModel.SkinId) ?? PetSkins.All[0];
+
+        BabyImage.Source = LoadImage(_skin.IdleImagePath);
+
+        if (!_skin.HasDedicatedPoses && _skin.EyeLeftXFrac.HasValue)
+        {
+            Canvas.SetLeft(EyeClosedLeft, _skin.EyeLeftXFrac.Value * BoxWidth);
+            Canvas.SetTop(EyeClosedLeft, _skin.EyeLeftYFrac!.Value * BoxHeight);
+            Canvas.SetLeft(EyeClosedRight, _skin.EyeRightXFrac!.Value * BoxWidth);
+            Canvas.SetTop(EyeClosedRight, _skin.EyeRightYFrac!.Value * BoxHeight);
+        }
+    }
+
+    private static BitmapImage LoadImage(string path) =>
+        new(new Uri("pack://application:,,," + path));
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -104,10 +133,17 @@ public partial class AgentPetControl : UserControl
     {
         if (!_storyboardsBuilt) return;
 
+        if (_skin.HasDedicatedPoses)
+        {
+            ApplyDedicatedPoseState(state);
+            return;
+        }
+
         switch (state)
         {
             case PetState.Working:
                 EyesClosed.Visibility = Visibility.Collapsed;
+                PetImage.Source = LoadImage(_skin.WorkingImagePath);
                 PetImage.BeginAnimation(UIElement.OpacityProperty,
                     new DoubleAnimation(WorkingOpacity, TimeSpan.FromSeconds(0.4)));
                 _zzz.Stop();
@@ -119,6 +155,7 @@ public partial class AgentPetControl : UserControl
 
             case PetState.Idle:
                 EyesClosed.Visibility = Visibility.Collapsed;
+                PetImage.Source = LoadImage(_skin.IdleImagePath);
                 PetImage.BeginAnimation(UIElement.OpacityProperty,
                     new DoubleAnimation(IdleOpacity, TimeSpan.FromSeconds(0.4)));
                 _zzz.Stop();
@@ -131,11 +168,47 @@ public partial class AgentPetControl : UserControl
 
             case PetState.Sleeping:
                 EyesClosed.Visibility = Visibility.Visible;
+                PetImage.Source = LoadImage(_skin.SleepingImagePath);
                 PetImage.BeginAnimation(UIElement.OpacityProperty,
                     new DoubleAnimation(SleepingOpacity, TimeSpan.FromSeconds(0.4)));
                 _bob.Stop();
                 _babyBob.Stop();
                 _zzz.Begin();
+                break;
+        }
+    }
+
+    /// <summary>Skins with real per-state artwork: just swap the image, no synthetic
+    /// opacity dimming, eye overlay, or zzz text — the art already carries the pose.</summary>
+    private void ApplyDedicatedPoseState(PetState state)
+    {
+        EyesClosed.Visibility = Visibility.Collapsed;
+        _zzz.Stop();
+        ZzzText.Opacity = 0;
+        PetImage.BeginAnimation(UIElement.OpacityProperty, null);
+        PetImage.Opacity = 1.0;
+
+        switch (state)
+        {
+            case PetState.Working:
+                PetImage.Source = LoadImage(_skin.WorkingImagePath);
+                _bob.Begin();
+                _bob.SetSpeedRatio(1.0);
+                _babyBob.Begin();
+                break;
+
+            case PetState.Idle:
+                PetImage.Source = LoadImage(_skin.IdleImagePath);
+                _bob.Begin();
+                _bob.SetSpeedRatio(0.45);
+                _babyBob.Begin();
+                _babyBob.SetSpeedRatio(0.5);
+                break;
+
+            case PetState.Sleeping:
+                PetImage.Source = LoadImage(_skin.SleepingImagePath);
+                _bob.Stop();
+                _babyBob.Stop();
                 break;
         }
     }
