@@ -12,11 +12,11 @@ public partial class AgentPetControl : UserControl
 
     private readonly Storyboard _bob = new();
     private readonly Storyboard _blink = new();
-    private readonly Storyboard _gear = new();
+    private readonly Storyboard _halo = new();
     private readonly Storyboard _feet = new();
     private readonly Storyboard _zzz = new();
     private readonly Storyboard _babyBob = new();
-    private Storyboard[] AllStoryboards => new[] { _bob, _blink, _gear, _feet, _zzz, _babyBob };
+    private Storyboard[] AllStoryboards => new[] { _bob, _blink, _halo, _feet, _zzz, _babyBob };
 
     private AgentPetViewModel? _viewModel;
     private bool _storyboardsBuilt;
@@ -71,9 +71,12 @@ public partial class AgentPetControl : UserControl
 
         AddAnimation(_bob, Bob, "Y", 0, -3, TimeSpan.FromSeconds(0.45), autoReverse: true);
         AddAnimation(_babyBob, BabyBob, "Y", 0, -2, TimeSpan.FromSeconds(0.5), autoReverse: true);
-        AddAnimation(_gear, GearSpin, "Angle", 0, 360, TimeSpan.FromSeconds(1.2));
         AddAnimation(_feet, FootLT, "X", 0, 2, TimeSpan.FromSeconds(0.3), autoReverse: true);
         AddAnimation(_feet, FootRT, "X", 0, -2, TimeSpan.FromSeconds(0.3), autoReverse: true);
+
+        // Wings flutter gently while working
+        AddAnimation(_halo, WingLeftRotate, "Angle", -5, 8, TimeSpan.FromSeconds(0.6), autoReverse: true);
+        AddAnimation(_halo, WingRightRotate, "Angle", 5, -8, TimeSpan.FromSeconds(0.6), autoReverse: true);
 
         // Blink: quick close-open once every ~4s, staggered so pets don't blink in sync
         foreach (var target in new object[] { BlinkL, BlinkR })
@@ -135,12 +138,14 @@ public partial class AgentPetControl : UserControl
                 EyesOpen.Visibility = Visibility.Visible;
                 EyesClosed.Visibility = Visibility.Collapsed;
                 Smile.Visibility = Visibility.Visible;
-                Gear.Visibility = Visibility.Visible;
                 Sparkle.Visibility = Visibility.Visible;
-                BodyTilt.Angle = -4;
+                WingLeftRotate.Angle = 0;
+                WingRightRotate.Angle = 0;
+                Halo.BeginAnimation(UIElement.OpacityProperty,
+                    new DoubleAnimation(0.85, TimeSpan.FromSeconds(0.4)));
                 _zzz.Stop();
                 ZzzText.Opacity = 0;
-                _gear.Begin();
+                _halo.Begin();
                 _bob.Begin();
                 _bob.SetSpeedRatio(1.0);
                 _feet.Begin();
@@ -152,12 +157,14 @@ public partial class AgentPetControl : UserControl
                 EyesOpen.Visibility = Visibility.Visible;
                 EyesClosed.Visibility = Visibility.Collapsed;
                 Smile.Visibility = Visibility.Visible;
-                Gear.Visibility = Visibility.Collapsed;
                 Sparkle.Visibility = Visibility.Collapsed;
-                BodyTilt.Angle = 0;
+                WingLeftRotate.Angle = 15;
+                WingRightRotate.Angle = -15;
+                Halo.BeginAnimation(UIElement.OpacityProperty,
+                    new DoubleAnimation(0.3, TimeSpan.FromSeconds(0.4)));
                 _zzz.Stop();
                 ZzzText.Opacity = 0;
-                _gear.Stop();
+                _halo.Stop();
                 _bob.Begin();
                 _bob.SetSpeedRatio(0.45);
                 _feet.Begin();
@@ -170,10 +177,12 @@ public partial class AgentPetControl : UserControl
                 EyesOpen.Visibility = Visibility.Collapsed;
                 EyesClosed.Visibility = Visibility.Visible;
                 Smile.Visibility = Visibility.Collapsed;
-                Gear.Visibility = Visibility.Collapsed;
                 Sparkle.Visibility = Visibility.Collapsed;
-                BodyTilt.Angle = 0;
-                _gear.Stop();
+                WingLeftRotate.Angle = 15;
+                WingRightRotate.Angle = -15;
+                Halo.BeginAnimation(UIElement.OpacityProperty,
+                    new DoubleAnimation(0, TimeSpan.FromSeconds(0.4)));
+                _halo.Stop();
                 _bob.Stop();
                 _feet.Stop();
                 _babyBob.Stop();
