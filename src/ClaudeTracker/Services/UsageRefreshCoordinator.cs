@@ -276,12 +276,19 @@ public class UsageRefreshCoordinator : IUsageRefreshCoordinator, IDisposable
         _resetTimer = new DispatcherTimer { Interval = delay + TimeSpan.FromSeconds(2) }; // 2s buffer
         _resetTimer.Tick += async (_, _) =>
         {
-            _resetTimer?.Stop();
-            LoggingService.Instance.Log("Session reset time reached — auto-refreshing");
-            await RefreshAsync();
+            try
+            {
+                _resetTimer?.Stop();
+                LoggingService.Instance.Log("Session reset time reached — auto-refreshing");
+                await RefreshAsync();
+            }
+            catch (Exception ex)
+            {
+                LoggingService.Instance.LogError("Reset-time refresh failed", ex);
+            }
         };
         _resetTimer.Start();
-        LoggingService.Instance.Log($"Scheduled auto-refresh at session reset ({resetTime:HH:mm:ss} UTC)");
+        LoggingService.Instance.LogDebug($"Scheduled auto-refresh at session reset ({resetTime:HH:mm:ss} UTC)");
     }
 
     private async void OnPowerModeChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs e)

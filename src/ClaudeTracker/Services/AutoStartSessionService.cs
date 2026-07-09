@@ -35,7 +35,11 @@ public class AutoStartSessionService : IDisposable
         {
             Interval = TimeSpan.FromMinutes(Constants.AutoStart.CheckIntervalMinutes)
         };
-        _timer.Tick += async (_, _) => await CheckAndAutoStart();
+        _timer.Tick += async (_, _) =>
+        {
+            try { await CheckAndAutoStart(); }
+            catch (Exception ex) { LoggingService.Instance.LogError("Auto-start check failed", ex); }
+        };
         _timer.Start();
 
         LoggingService.Instance.Log("AutoStartSessionService started");
@@ -92,8 +96,15 @@ public class AutoStartSessionService : IDisposable
     {
         if (e.Mode == Microsoft.Win32.PowerModes.Resume)
         {
-            LoggingService.Instance.Log("System resumed from sleep - checking auto-start");
-            await CheckAndAutoStart();
+            try
+            {
+                LoggingService.Instance.Log("System resumed from sleep - checking auto-start");
+                await CheckAndAutoStart();
+            }
+            catch (Exception ex)
+            {
+                LoggingService.Instance.LogError("Auto-start check on resume failed", ex);
+            }
         }
     }
 

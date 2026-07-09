@@ -48,7 +48,11 @@ public class UpdateService : IUpdateService, IDisposable
         }
 
         _periodicTimer = new System.Timers.Timer(CheckIntervalMs) { AutoReset = true };
-        _periodicTimer.Elapsed += async (_, _) => await CheckForUpdatesAsync();
+        _periodicTimer.Elapsed += async (_, _) =>
+        {
+            try { await CheckForUpdatesAsync(); }
+            catch (Exception ex) { LoggingService.Instance.LogError("Periodic update check failed", ex); }
+        };
     }
 
     public async Task StartAsync()

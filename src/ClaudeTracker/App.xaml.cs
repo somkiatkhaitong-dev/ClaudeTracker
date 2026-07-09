@@ -25,6 +25,11 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Force software rendering — hardware-accelerated composition is broken on some
+        // systems (blank windows, VisualTarget errors on layered-window creation)
+        System.Windows.Media.RenderOptions.ProcessRenderMode =
+            System.Windows.Interop.RenderMode.SoftwareOnly;
+
         // Global exception handlers — log crashes before the process dies
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
@@ -221,7 +226,11 @@ public partial class App : Application
             {
                 Interval = TimeSpan.FromMinutes(5)
             };
-            pruneTimer.Tick += (_, _) => sessionTracking.PruneStale();
+            pruneTimer.Tick += (_, _) =>
+            {
+                try { sessionTracking.PruneStale(); }
+                catch (Exception ex) { LoggingService.Instance.LogError("Stale session prune failed", ex); }
+            };
             pruneTimer.Start();
 
             // Wire configurable notifications from hook events
@@ -284,14 +293,21 @@ public partial class App : Application
         {
             Dispatcher.Invoke(() =>
             {
-                var appSettings = settingsService.Settings;
-                if (Views.GitHubStarPromptWindow.ShouldShow(appSettings))
+                try
                 {
-                    new Views.GitHubStarPromptWindow().Show();
+                    var appSettings = settingsService.Settings;
+                    if (Views.GitHubStarPromptWindow.ShouldShow(appSettings))
+                    {
+                        new Views.GitHubStarPromptWindow().Show();
+                    }
+                    else if (Views.FeedbackPromptWindow.ShouldShow(appSettings))
+                    {
+                        new Views.FeedbackPromptWindow().Show();
+                    }
                 }
-                else if (Views.FeedbackPromptWindow.ShouldShow(appSettings))
+                catch (Exception ex)
                 {
-                    new Views.FeedbackPromptWindow().Show();
+                    LoggingService.Instance.LogError("Failed to show engagement prompt", ex);
                 }
             });
         });
@@ -330,8 +346,8 @@ public partial class App : Application
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        LoggingService.Instance.LogFatal("Unhandled UI thread exception", e.Exception);
-        LoggingService.Instance.Flush();
+        LoggingService.Instance.LogError("Unhandled UI thread exception", e.Exception);
+        e.Handled = true;
     }
 
     private void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
