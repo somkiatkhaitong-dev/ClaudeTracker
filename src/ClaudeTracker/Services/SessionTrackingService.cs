@@ -46,6 +46,27 @@ public class SessionTrackingService : ISessionTrackingService
         });
     }
 
+    /// <summary>Registers a session seen mid-flight (started before this app launched,
+    /// so its SessionStart event was missed). No-op when the session is already known.</summary>
+    public void EnsureSession(string sessionId, string projectDirectory, long? consoleWindowHandle = null)
+    {
+        Application.Current?.Dispatcher.Invoke(() =>
+        {
+            lock (_lock)
+            {
+                if (ActiveSessions.Any(s => s.SessionId == sessionId)) return;
+
+                ActiveSessions.Add(new SessionState
+                {
+                    SessionId = sessionId,
+                    Cwd = projectDirectory,
+                    ConsoleWindowHandle = consoleWindowHandle
+                });
+            }
+            SessionsChanged?.Invoke(this, EventArgs.Empty);
+        });
+    }
+
     public void EndSession(string sessionId)
     {
         Application.Current?.Dispatcher.Invoke(() =>

@@ -52,6 +52,15 @@ public class SessionTracker : IHookEventObserver
                 if (!string.IsNullOrEmpty(endAgentId))
                     _sessionTracking.EndSubagent(sessionId, endAgentId);
                 break;
+
+            default:
+                // Sessions already running when this app launched never send SessionStart —
+                // pick them up from whatever event arrives next.
+                _sessionTracking.EnsureSession(
+                    sessionId,
+                    json[Fields.Cwd]?.GetValue<string>() ?? "",
+                    evt.ConsoleWindowHandle);
+                break;
         }
     }
 

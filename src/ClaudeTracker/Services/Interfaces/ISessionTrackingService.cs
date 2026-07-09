@@ -9,6 +9,7 @@ public interface ISessionTrackingService
     int ActiveSessionCount { get; }
     event EventHandler? SessionsChanged;
     void RegisterSession(string sessionId, string projectDirectory, string permissionMode, string? model, long? consoleWindowHandle = null);
+    void EnsureSession(string sessionId, string projectDirectory, long? consoleWindowHandle = null);
     void EndSession(string sessionId);
     void RecordActivity(string sessionId, ActivityEntry entry);
     void RegisterSubagent(string sessionId, string agentId, string? agentType);
