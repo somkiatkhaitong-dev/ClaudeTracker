@@ -8,15 +8,14 @@ namespace ClaudeTracker.Views.Controls;
 
 public partial class AgentPetControl : UserControl
 {
-    private static readonly Random Random = new();
+    private const double WorkingOpacity = 1.0;
+    private const double IdleOpacity = 0.82;
+    private const double SleepingOpacity = 0.55;
 
     private readonly Storyboard _bob = new();
-    private readonly Storyboard _blink = new();
-    private readonly Storyboard _halo = new();
-    private readonly Storyboard _feet = new();
-    private readonly Storyboard _zzz = new();
     private readonly Storyboard _babyBob = new();
-    private Storyboard[] AllStoryboards => new[] { _bob, _blink, _halo, _feet, _zzz, _babyBob };
+    private readonly Storyboard _zzz = new();
+    private Storyboard[] AllStoryboards => new[] { _bob, _babyBob, _zzz };
 
     private AgentPetViewModel? _viewModel;
     private bool _storyboardsBuilt;
@@ -71,31 +70,6 @@ public partial class AgentPetControl : UserControl
 
         AddAnimation(_bob, Bob, "Y", 0, -3, TimeSpan.FromSeconds(0.45), autoReverse: true);
         AddAnimation(_babyBob, BabyBob, "Y", 0, -2, TimeSpan.FromSeconds(0.5), autoReverse: true);
-        AddAnimation(_feet, FootLT, "X", 0, 2, TimeSpan.FromSeconds(0.3), autoReverse: true);
-        AddAnimation(_feet, FootRT, "X", 0, -2, TimeSpan.FromSeconds(0.3), autoReverse: true);
-
-        // Wings flutter gently while working
-        AddAnimation(_halo, WingLeftRotate, "Angle", -5, 8, TimeSpan.FromSeconds(0.6), autoReverse: true);
-        AddAnimation(_halo, WingRightRotate, "Angle", 5, -8, TimeSpan.FromSeconds(0.6), autoReverse: true);
-
-        // Blink: quick close-open once every ~4s, staggered so pets don't blink in sync
-        foreach (var target in new object[] { BlinkL, BlinkR })
-        {
-            var anim = new DoubleAnimationUsingKeyFrames
-            {
-                Duration = TimeSpan.FromSeconds(4),
-                RepeatBehavior = RepeatBehavior.Forever,
-                BeginTime = TimeSpan.FromSeconds(Random.NextDouble() * 2)
-            };
-            anim.KeyFrames.Add(new DiscreteDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.Zero)));
-            anim.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.6))));
-            anim.KeyFrames.Add(new LinearDoubleKeyFrame(0.1, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.72))));
-            anim.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.85))));
-            Timeline.SetDesiredFrameRate(anim, 30);
-            Storyboard.SetTarget(anim, (DependencyObject)target);
-            Storyboard.SetTargetProperty(anim, new PropertyPath("ScaleY"));
-            _blink.Children.Add(anim);
-        }
 
         var zzzOpacity = new DoubleAnimationUsingKeyFrames
         {
@@ -110,8 +84,6 @@ public partial class AgentPetControl : UserControl
         Storyboard.SetTargetProperty(zzzOpacity, new PropertyPath("Opacity"));
         _zzz.Children.Add(zzzOpacity);
         AddAnimation(_zzz, ZzzDrift, "Y", 0, -8, TimeSpan.FromSeconds(2.5));
-
-        _blink.Begin();
     }
 
     private static void AddAnimation(Storyboard storyboard, DependencyObject target, string property,
@@ -135,56 +107,33 @@ public partial class AgentPetControl : UserControl
         switch (state)
         {
             case PetState.Working:
-                EyesOpen.Visibility = Visibility.Visible;
                 EyesClosed.Visibility = Visibility.Collapsed;
-                Smile.Visibility = Visibility.Visible;
-                Sparkle.Visibility = Visibility.Visible;
-                WingLeftRotate.Angle = 0;
-                WingRightRotate.Angle = 0;
-                Halo.BeginAnimation(UIElement.OpacityProperty,
-                    new DoubleAnimation(0.85, TimeSpan.FromSeconds(0.4)));
+                PetImage.BeginAnimation(UIElement.OpacityProperty,
+                    new DoubleAnimation(WorkingOpacity, TimeSpan.FromSeconds(0.4)));
                 _zzz.Stop();
                 ZzzText.Opacity = 0;
-                _halo.Begin();
                 _bob.Begin();
                 _bob.SetSpeedRatio(1.0);
-                _feet.Begin();
-                _feet.SetSpeedRatio(1.0);
                 _babyBob.Begin();
                 break;
 
             case PetState.Idle:
-                EyesOpen.Visibility = Visibility.Visible;
                 EyesClosed.Visibility = Visibility.Collapsed;
-                Smile.Visibility = Visibility.Visible;
-                Sparkle.Visibility = Visibility.Collapsed;
-                WingLeftRotate.Angle = 15;
-                WingRightRotate.Angle = -15;
-                Halo.BeginAnimation(UIElement.OpacityProperty,
-                    new DoubleAnimation(0.3, TimeSpan.FromSeconds(0.4)));
+                PetImage.BeginAnimation(UIElement.OpacityProperty,
+                    new DoubleAnimation(IdleOpacity, TimeSpan.FromSeconds(0.4)));
                 _zzz.Stop();
                 ZzzText.Opacity = 0;
-                _halo.Stop();
                 _bob.Begin();
                 _bob.SetSpeedRatio(0.45);
-                _feet.Begin();
-                _feet.SetSpeedRatio(0.5);
                 _babyBob.Begin();
                 _babyBob.SetSpeedRatio(0.5);
                 break;
 
             case PetState.Sleeping:
-                EyesOpen.Visibility = Visibility.Collapsed;
                 EyesClosed.Visibility = Visibility.Visible;
-                Smile.Visibility = Visibility.Collapsed;
-                Sparkle.Visibility = Visibility.Collapsed;
-                WingLeftRotate.Angle = 15;
-                WingRightRotate.Angle = -15;
-                Halo.BeginAnimation(UIElement.OpacityProperty,
-                    new DoubleAnimation(0, TimeSpan.FromSeconds(0.4)));
-                _halo.Stop();
+                PetImage.BeginAnimation(UIElement.OpacityProperty,
+                    new DoubleAnimation(SleepingOpacity, TimeSpan.FromSeconds(0.4)));
                 _bob.Stop();
-                _feet.Stop();
                 _babyBob.Stop();
                 _zzz.Begin();
                 break;
