@@ -179,6 +179,27 @@
                            VerticalAlignment="Center" HorizontalAlignment="Center" />
             </Grid>
 
+            <TextBlock Text="Project Overrides" FontSize="13" Margin="0,0,0,4" />
+            <TextBlock Text="Pin a character to a project folder. Leave Auto to keep cycling."
+                       FontSize="11" Foreground="{DynamicResource TextSubtle}" TextWrapping="Wrap" Margin="0,0,0,8" />
+            <ItemsControl x:Name="ProjectSkinList" Margin="0,0,0,4">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,4,0,4">
+                            <TextBlock Text="{Binding ProjectName}" VerticalAlignment="Center" FontSize="13"
+                                       ToolTip="{Binding ProjectPath}" />
+                            <ComboBox HorizontalAlignment="Right" Width="140"
+                                      Style="{StaticResource MaterialDesignComboBox}" FontSize="12"
+                                      ItemsSource="{Binding SkinOptions}" DisplayMemberPath="DisplayName"
+                                      SelectedValuePath="Id" SelectedValue="{Binding SelectedSkinId, Mode=TwoWay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock x:Name="NoProjectsText"
+                       Text="No projects seen yet — open a Claude Code session to add one here."
+                       FontSize="11" Foreground="{DynamicResource TextSubtle}" TextWrapping="Wrap" Margin="0,0,0,14" />
+
             <Button x:Name="ResetPetsPositionButton" Content="Reset Window Position"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     HorizontalAlignment="Left" Height="34" FontSize="12" Margin="0,0,0,20" />

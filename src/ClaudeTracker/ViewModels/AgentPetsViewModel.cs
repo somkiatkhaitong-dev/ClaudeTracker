@@ -38,6 +38,18 @@ public partial class AgentPetsViewModel : ObservableObject
         PetRuntimeSettings.SleepThresholdMinutes = settings.PetSleepThresholdMinutes;
     }
 
+    private string ResolveSkinId(string cwd, PetSkin[] enabledSkins)
+    {
+        if (!string.IsNullOrEmpty(cwd) &&
+            _settingsService.Settings.ProjectSkinAssignments.TryGetValue(cwd, out var assignedId) &&
+            enabledSkins.Any(s => s.Id == assignedId))
+        {
+            return assignedId;
+        }
+
+        return enabledSkins[_nextSkinIndex++ % enabledSkins.Length].Id;
+    }
+
     private PetSkin[] EnabledSkins()
     {
         var disabled = _settingsService.Settings.DisabledPetSkins;
@@ -66,7 +78,7 @@ public partial class AgentPetsViewModel : ObservableObject
             {
                 pet = new AgentPetViewModel(session.SessionId)
                 {
-                    SkinId = skins[_nextSkinIndex++ % skins.Length].Id,
+                    SkinId = ResolveSkinId(session.Cwd, skins),
                     X = _random.NextDouble() * (Constants.Pets.WindowWidth - Constants.Pets.PetWidth),
                     FacingRight = _random.Next(2) == 0,
                     SpeedJitter = 0.8 + _random.NextDouble() * 0.4

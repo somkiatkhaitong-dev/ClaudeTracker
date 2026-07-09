@@ -81,6 +81,7 @@ public partial class App : Application
         if (mockAgents)
             _services.GetRequiredService<MockSessionSeeder>().Start();
 
+
         // Start usage refresh
         var refreshCoordinator = _services.GetRequiredService<IUsageRefreshCoordinator>();
         refreshCoordinator.Start();
