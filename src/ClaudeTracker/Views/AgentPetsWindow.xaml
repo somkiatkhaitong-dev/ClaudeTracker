@@ -8,6 +8,8 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ResizeMode="NoResize" ShowActivated="False">
     <Grid x:Name="RootGrid" Background="Transparent">
+        <Border CornerRadius="14" Background="{DynamicResource SurfacePopover}" Opacity="0.55"
+                Margin="0,26,0,0"/>
         <ItemsControl x:Name="PetsHost" Margin="0,0,0,14">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
