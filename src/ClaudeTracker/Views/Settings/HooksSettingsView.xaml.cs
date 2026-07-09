@@ -130,6 +130,9 @@ public partial class HooksSettingsView : UserControl
 
         ResetPetsPositionButton.Click += (_, _) => _vm.ResetPetsPositionCommand.Execute(null);
 
+        ProjectSkinList.ItemsSource = _vm.ProjectSkinRows;
+        NoProjectsText.Visibility = _vm.ProjectSkinRows.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
+
         // Install / Uninstall buttons
         InstallButton.Click += async (_, _) => { await RunBridgeCommandAsync("install"); _vm.CheckInstallStatus(); UpdateInstallUI(); };
         UninstallButton.Click += async (_, _) => { await RunBridgeCommandAsync("uninstall"); _vm.CheckInstallStatus(); UpdateInstallUI(); };

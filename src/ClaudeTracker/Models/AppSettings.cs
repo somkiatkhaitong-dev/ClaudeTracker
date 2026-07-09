@@ -62,6 +62,11 @@ public class AppSettings
     [JsonPropertyName("petSleepThresholdMinutes")]
     public double PetSleepThresholdMinutes { get; set; } = 2.0;
 
+    /// <summary>Project folder (session Cwd) → pet skin id. Pins a character to a project
+    /// so it's consistent across restarts instead of round-robin cycling.</summary>
+    [JsonPropertyName("projectSkinAssignments")]
+    public Dictionary<string, string> ProjectSkinAssignments { get; set; } = new();
+
     [JsonPropertyName("hasStarredGitHub")]
     public bool HasStarredGitHub { get; set; }
 

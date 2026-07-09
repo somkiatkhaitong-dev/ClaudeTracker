@@ -13,6 +13,7 @@ public partial class HooksSettingsViewModel : ObservableObject
     private readonly ISettingsService _settingsService;
     private readonly IHookIpcService _hookIpcService;
     private readonly IActivityService _activityService;
+    private readonly ISessionTrackingService _sessionTracking;
 
     [ObservableProperty] private bool _hooksEnabled;
     [ObservableProperty] private bool _permissionPopupsEnabled;
@@ -35,6 +36,7 @@ public partial class HooksSettingsViewModel : ObservableObject
     [ObservableProperty] private double _petSpeedMultiplier;
     [ObservableProperty] private double _petSleepThresholdMinutes;
     public ObservableCollection<PetSkinToggle> PetSkinToggles { get; } = new();
+    public ObservableCollection<ProjectSkinRow> ProjectSkinRows { get; } = new();
 
     public bool IsIpcRunning => _hookIpcService.IsRunning;
 
@@ -56,16 +58,19 @@ public partial class HooksSettingsViewModel : ObservableObject
     private double _initialPetSpeedMultiplier;
     private double _initialPetSleepThresholdMinutes;
     private List<string> _initialDisabledPetSkins = new();
+    private Dictionary<string, string> _initialProjectAssignments = new();
     private bool _initialized;
 
     public HooksSettingsViewModel(
         ISettingsService settingsService,
         IHookIpcService hookIpcService,
-        IActivityService activityService)
+        IActivityService activityService,
+        ISessionTrackingService sessionTracking)
     {
         _settingsService = settingsService;
         _hookIpcService = hookIpcService;
         _activityService = activityService;
+        _sessionTracking = sessionTracking;
 
         var settings = _settingsService.Settings;
 
@@ -95,6 +100,23 @@ public partial class HooksSettingsViewModel : ObservableObject
             PetSkinToggles.Add(toggle);
         }
 
+        var knownProjectPaths = _sessionTracking.ActiveSessions
+            .Select(s => s.Cwd)
+            .Where(c => !string.IsNullOrEmpty(c))
+            .Union(settings.ProjectSkinAssignments.Keys)
+            .Distinct()
+            .OrderBy(p => p, StringComparer.OrdinalIgnoreCase);
+        foreach (var path in knownProjectPaths)
+        {
+            var name = System.IO.Path.GetFileName(path.TrimEnd('\\', '/'));
+            var row = new ProjectSkinRow(path, string.IsNullOrEmpty(name) ? path : name, PetSkins.All)
+            {
+                SelectedSkinId = settings.ProjectSkinAssignments.GetValueOrDefault(path, "")
+            };
+            row.PropertyChanged += (_, _) => DetectChanges();
+            ProjectSkinRows.Add(row);
+        }
+
         // Snapshot
         _initialHooksEnabled = HooksEnabled;
         _initialPermissionPopups = PermissionPopupsEnabled;
@@ -113,6 +135,7 @@ public partial class HooksSettingsViewModel : ObservableObject
         _initialPetSpeedMultiplier = PetSpeedMultiplier;
         _initialPetSleepThresholdMinutes = PetSleepThresholdMinutes;
         _initialDisabledPetSkins = CurrentDisabledSkinIds();
+        _initialProjectAssignments = CurrentProjectAssignments();
         _initialized = true;
     }
 
@@ -121,6 +144,10 @@ public partial class HooksSettingsViewModel : ObservableObject
 
     private List<string> CurrentDisabledSkinIds() =>
         PetSkinToggles.Where(t => !t.IsEnabled).Select(t => t.Id).OrderBy(id => id).ToList();
+
+    private Dictionary<string, string> CurrentProjectAssignments() =>
+        ProjectSkinRows.Where(r => !string.IsNullOrEmpty(r.SelectedSkinId))
+            .ToDictionary(r => r.ProjectPath, r => r.SelectedSkinId);
 
     public void CheckInstallStatus()
     {
@@ -184,8 +211,12 @@ public partial class HooksSettingsViewModel : ObservableObject
             NotifySubagent != _initialNotifySubagent ||
             PetSpeedMultiplier != _initialPetSpeedMultiplier ||
             PetSleepThresholdMinutes != _initialPetSleepThresholdMinutes ||
-            !CurrentDisabledSkinIds().SequenceEqual(_initialDisabledPetSkins);
+            !CurrentDisabledSkinIds().SequenceEqual(_initialDisabledPetSkins) ||
+            !DictionariesEqual(CurrentProjectAssignments(), _initialProjectAssignments);
     }
+
+    private static bool DictionariesEqual(Dictionary<string, string> a, Dictionary<string, string> b) =>
+        a.Count == b.Count && a.All(kv => b.TryGetValue(kv.Key, out var v) && v == kv.Value);
 
     [RelayCommand]
     private void Save()
@@ -212,6 +243,7 @@ public partial class HooksSettingsViewModel : ObservableObject
         settings.PetSpeedMultiplier = PetSpeedMultiplier;
         settings.PetSleepThresholdMinutes = PetSleepThresholdMinutes;
         settings.DisabledPetSkins = CurrentDisabledSkinIds();
+        settings.ProjectSkinAssignments = CurrentProjectAssignments();
 
         _settingsService.Save();
         _activityService.TrimToMax(MaxFeedEntries);
@@ -250,6 +282,7 @@ public partial class HooksSettingsViewModel : ObservableObject
         _initialPetSpeedMultiplier = PetSpeedMultiplier;
         _initialPetSleepThresholdMinutes = PetSleepThresholdMinutes;
         _initialDisabledPetSkins = CurrentDisabledSkinIds();
+        _initialProjectAssignments = CurrentProjectAssignments();
         HasUnsavedChanges = false;
     }
 
