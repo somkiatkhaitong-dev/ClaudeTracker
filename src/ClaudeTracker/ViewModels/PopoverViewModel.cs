@@ -330,7 +330,7 @@ public partial class PopoverViewModel : ObservableObject
     private void UpdateProfilesList()
     {
         var source = _profileService.Profiles;
-        LoggingService.Instance.Log(
+        LoggingService.Instance.LogDebug(
             $"PopoverVM.UpdateProfilesList: source={source.Count}, collection={Profiles.Count}");
         Profiles.Clear();
         foreach (var p in source)

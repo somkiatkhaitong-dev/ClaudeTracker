@@ -44,7 +44,7 @@ public class ClaudeApiService : IClaudeApiService
             var result = _validator.Validate(profile.ClaudeSessionKey);
             if (result.IsValid)
             {
-                LoggingService.Instance.Log("Using Claude Session Key");
+                LoggingService.Instance.LogDebug("Using Claude Session Key");
                 return new AuthInfo(AuthenticationType.ClaudeSessionKey, result.SanitizedKey!);
             }
         }
@@ -57,7 +57,7 @@ public class ClaudeApiService : IClaudeApiService
                 var token = _cliSyncService.ExtractAccessToken(profile.CliCredentialsJSON);
                 if (!string.IsNullOrEmpty(token))
                 {
-                    LoggingService.Instance.Log("Using saved Claude OAuth token");
+                    LoggingService.Instance.LogDebug("Using saved Claude OAuth token");
                     return new AuthInfo(AuthenticationType.CliOAuth, token);
                 }
             }
@@ -70,7 +70,7 @@ public class ClaudeApiService : IClaudeApiService
             var token = _cliSyncService.ExtractAccessToken(systemCreds);
             if (!string.IsNullOrEmpty(token))
             {
-                LoggingService.Instance.Log("Using Claude OAuth credentials from ~/.claude/.credentials.json");
+                LoggingService.Instance.LogDebug("Using Claude OAuth credentials from ~/.claude/.credentials.json");
                 return new AuthInfo(AuthenticationType.CliOAuth, token);
             }
         }
@@ -145,7 +145,7 @@ public class ClaudeApiService : IClaudeApiService
         var profile = _profileService.ActiveProfile;
         if (!string.IsNullOrEmpty(profile?.OrganizationId))
         {
-            LoggingService.Instance.LogInfo($"Using stored organization ID: {profile.OrganizationId}");
+            LoggingService.Instance.LogDebug($"Using stored organization ID: {profile.OrganizationId}");
             return profile.OrganizationId;
         }
 

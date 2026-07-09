@@ -53,7 +53,7 @@ public partial class ProfilesViewModel : ObservableObject
     private void RefreshList()
     {
         var source = _profileService.Profiles;
-        LoggingService.Instance.Log(
+        LoggingService.Instance.LogDebug(
             $"ProfilesVM.RefreshList: source={source.Count}, collection={Profiles.Count}");
         Profiles.Clear();
         foreach (var p in source)
