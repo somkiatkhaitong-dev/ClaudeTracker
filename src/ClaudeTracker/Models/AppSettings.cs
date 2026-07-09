@@ -44,6 +44,15 @@ public class AppSettings
     [JsonPropertyName("isFloatingWidgetDocked")]
     public bool IsFloatingWidgetDocked { get; set; }
 
+    [JsonPropertyName("agentPetsEnabled")]
+    public bool AgentPetsEnabled { get; set; } = true;
+
+    [JsonPropertyName("agentPetsWindowLeft")]
+    public double? AgentPetsWindowLeft { get; set; }
+
+    [JsonPropertyName("agentPetsWindowTop")]
+    public double? AgentPetsWindowTop { get; set; }
+
     [JsonPropertyName("hasStarredGitHub")]
     public bool HasStarredGitHub { get; set; }
 

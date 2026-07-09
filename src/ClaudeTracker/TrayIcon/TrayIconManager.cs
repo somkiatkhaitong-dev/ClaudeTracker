@@ -24,6 +24,7 @@ public class TrayIconManager : IDisposable
     private TaskbarIcon? _trayIcon;
     private PopoverWindow? _popoverWindow;
     private FloatingUsageWindow? _floatingWindow;
+    private AgentPetsWindow? _petsWindow;
 
     // Custom tooltip (bypasses Hardcodet's broken DPI-scaled tooltip positioning)
     private Window? _tooltipWindow;
@@ -96,6 +97,17 @@ public class TrayIconManager : IDisposable
         // Restore floating widget if it was enabled
         if (_settingsService.Settings.IsFloatingModeEnabled)
             ShowFloatingWindow();
+
+        // Desktop pets: auto show/hide as sessions come and go (never at startup with 0)
+        var petsViewModel = App.Services.GetRequiredService<ViewModels.AgentPetsViewModel>();
+        petsViewModel.PetsCountChanged += (_, _) =>
+        {
+            if (!_settingsService.Settings.AgentPetsEnabled) return;
+            if (petsViewModel.Pets.Count > 0)
+                ShowPetsWindow();
+            else
+                _petsWindow?.Hide();
+        };
 
         LoggingService.Instance.Log("Tray icon initialized");
     }
@@ -325,6 +337,20 @@ public class TrayIconManager : IDisposable
             menu.Items.Add(floatingItem);
         }
 
+        // Desktop pets (only useful when hooks feed session data)
+        if (_settingsService.Settings.HooksEnabled)
+        {
+            var petsItem = new MenuItem
+            {
+                Header = "Desktop Pets",
+                IsCheckable = true,
+                IsChecked = _settingsService.Settings.AgentPetsEnabled,
+                Style = itemStyle
+            };
+            petsItem.Click += (_, _) => ToggleAgentPets(petsItem.IsChecked);
+            menu.Items.Add(petsItem);
+        }
+
         menu.Items.Add(new Separator { Style = sepStyle });
 
         // Update indicator
@@ -421,6 +447,54 @@ public class TrayIconManager : IDisposable
         foreach (var item in menu.Items)
         {
             if (item is MenuItem { Header: "Floating Widget" } mi)
+            {
+                mi.IsChecked = isChecked;
+                break;
+            }
+        }
+    }
+
+    #endregion
+
+    #region Desktop Pets
+
+    private void ToggleAgentPets(bool enabled)
+    {
+        _settingsService.Settings.AgentPetsEnabled = enabled;
+        _settingsService.Save();
+
+        var petsViewModel = App.Services.GetRequiredService<ViewModels.AgentPetsViewModel>();
+        if (enabled && petsViewModel.Pets.Count > 0)
+            ShowPetsWindow();
+        else
+            _petsWindow?.Hide();
+    }
+
+    private void ShowPetsWindow()
+    {
+        if (_petsWindow == null)
+        {
+            _petsWindow = new AgentPetsWindow();
+            _petsWindow.CloseRequested += (_, _) =>
+            {
+                ToggleAgentPets(false);
+                UpdatePetsMenuCheckmark(false);
+            };
+        }
+
+        if (!_petsWindow.IsVisible)
+        {
+            _petsWindow.Show();
+            _petsWindow.RestorePosition();
+        }
+    }
+
+    private void UpdatePetsMenuCheckmark(bool isChecked)
+    {
+        if (_trayIcon?.ContextMenu is not { } menu) return;
+        foreach (var item in menu.Items)
+        {
+            if (item is MenuItem { Header: "Desktop Pets" } mi)
             {
                 mi.IsChecked = isChecked;
                 break;
@@ -563,6 +637,7 @@ public class TrayIconManager : IDisposable
         _tooltipPollTimer.Stop();
         _tooltipWindow?.Close();
         _floatingWindow?.Close();
+        _petsWindow?.Close();
         _popoverWindow?.Close();
         _trayIcon?.Dispose();
     }

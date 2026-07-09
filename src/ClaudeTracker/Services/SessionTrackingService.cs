@@ -91,9 +91,9 @@ public class SessionTrackingService : ISessionTrackingService
             {
                 var session = ActiveSessions.FirstOrDefault(s => s.SessionId == sessionId);
                 if (session == null) return;
-                if (!session.ActiveSubagents.Contains(agentId))
+                if (session.ActiveSubagents.All(a => a.Id != agentId))
                 {
-                    session.ActiveSubagents.Add(agentId);
+                    session.ActiveSubagents.Add(new SubagentInfo { Id = agentId, AgentType = agentType ?? string.Empty });
                     session.SubagentCount++;
                 }
             }
@@ -108,7 +108,7 @@ public class SessionTrackingService : ISessionTrackingService
             lock (_lock)
             {
                 var session = ActiveSessions.FirstOrDefault(s => s.SessionId == sessionId);
-                session?.ActiveSubagents.Remove(agentId);
+                session?.ActiveSubagents.RemoveAll(a => a.Id == agentId);
             }
             SessionsChanged?.Invoke(this, EventArgs.Empty);
         });

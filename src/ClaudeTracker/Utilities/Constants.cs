@@ -107,6 +107,18 @@ public static class Constants
         public const double RefreshIntervalMinutes = 5.0;
     }
 
+    public static class Pets
+    {
+        public const double WorkingThresholdSeconds = 15;
+        public const double SleepThresholdMinutes = 2;
+        public const int FrameIntervalMs = 33;
+        public const double WorkingSpeed = 1.6;
+        public const double IdleSpeed = 0.6;
+        public const double WindowWidth = 320;
+        public const double WindowHeight = 140;
+        public const double PetWidth = 56;
+    }
+
     public static class Hooks
     {
         public static string PipeName => $"{AppDirName}-Hooks-{Environment.UserName}";

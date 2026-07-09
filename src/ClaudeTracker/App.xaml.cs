@@ -76,6 +76,11 @@ public partial class App : Application
         _trayIconManager = _services.GetRequiredService<TrayIconManager>();
         _trayIconManager.Initialize();
 
+        // Seed fake sessions for desktop pets UI testing (bypasses the HooksEnabled gate)
+        var mockAgents = Environment.GetCommandLineArgs().Contains("--mock-agents", StringComparer.OrdinalIgnoreCase);
+        if (mockAgents)
+            _services.GetRequiredService<MockSessionSeeder>().Start();
+
         // Start usage refresh
         var refreshCoordinator = _services.GetRequiredService<IUsageRefreshCoordinator>();
         refreshCoordinator.Start();
@@ -398,6 +403,7 @@ public partial class App : Application
         // ViewModels
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<PopoverViewModel>();
+        services.AddSingleton<AgentPetsViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<PersonalUsageViewModel>();
         services.AddTransient<ApiBillingViewModel>();
@@ -436,6 +442,7 @@ public partial class App : Application
         // Services
         services.AddSingleton<IActivityService, ActivityService>();
         services.AddSingleton<ISessionTrackingService, SessionTrackingService>();
+        services.AddSingleton<MockSessionSeeder>();
     }
 
     private void InitializeTheme()

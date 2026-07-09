@@ -67,6 +67,14 @@ public class ActivityEntry
 
 // ── Session State ──
 
+/// <summary>An active subagent spawned by a Claude Code session.</summary>
+public class SubagentInfo
+{
+    public string Id { get; set; } = string.Empty;
+    public string AgentType { get; set; } = string.Empty;
+    public DateTime StartTime { get; set; } = DateTime.UtcNow;
+}
+
 /// <summary>Tracks an active Claude Code session with its activity history.</summary>
 public class SessionState
 {
@@ -79,7 +87,7 @@ public class SessionState
     public string CurrentActivity { get; set; } = string.Empty;
     public DateTime LastActivityTime { get; set; } = DateTime.UtcNow;
     public long? ConsoleWindowHandle { get; set; }
-    public List<string> ActiveSubagents { get; set; } = new();
+    public List<SubagentInfo> ActiveSubagents { get; set; } = new();
 
     [JsonIgnore]
     public ObservableCollection<ActivityEntry> Activities { get; set; } = new();
