@@ -502,6 +502,18 @@ public class TrayIconManager : IDisposable
         }
     }
 
+    /// <summary>Clears the saved pets window position and, if the window is currently
+    /// visible, snaps it back to the default corner immediately.</summary>
+    public void ResetPetsPosition()
+    {
+        _settingsService.Settings.AgentPetsWindowLeft = null;
+        _settingsService.Settings.AgentPetsWindowTop = null;
+        _settingsService.Save();
+
+        if (_petsWindow is { IsVisible: true })
+            _petsWindow.RestorePosition();
+    }
+
     #endregion
 
     #region Custom Tooltip

@@ -1,6 +1,9 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ClaudeTracker.Services.Interfaces;
+using ClaudeTracker.TrayIcon;
+using ClaudeTracker.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ClaudeTracker.ViewModels;
@@ -29,6 +32,10 @@ public partial class HooksSettingsViewModel : ObservableObject
     [ObservableProperty] private bool _isHooksInstalled;
     [ObservableProperty] private string _installStatusText = "";
 
+    [ObservableProperty] private double _petSpeedMultiplier;
+    [ObservableProperty] private double _petSleepThresholdMinutes;
+    public ObservableCollection<PetSkinToggle> PetSkinToggles { get; } = new();
+
     public bool IsIpcRunning => _hookIpcService.IsRunning;
 
     // Snapshot
@@ -46,6 +53,9 @@ public partial class HooksSettingsViewModel : ObservableObject
     private bool _initialNotifyConfigChange;
     private bool _initialNotifySessionLifecycle;
     private bool _initialNotifySubagent;
+    private double _initialPetSpeedMultiplier;
+    private double _initialPetSleepThresholdMinutes;
+    private List<string> _initialDisabledPetSkins = new();
     private bool _initialized;
 
     public HooksSettingsViewModel(
@@ -76,6 +86,15 @@ public partial class HooksSettingsViewModel : ObservableObject
         NotifySessionLifecycle = prefs.GetValueOrDefault("sessionLifecycle", false);
         NotifySubagent = prefs.GetValueOrDefault("subagent", false);
 
+        PetSpeedMultiplier = settings.PetSpeedMultiplier;
+        PetSleepThresholdMinutes = settings.PetSleepThresholdMinutes;
+        foreach (var skin in PetSkins.All)
+        {
+            var toggle = new PetSkinToggle(skin.Id, FormatSkinName(skin.Id), !settings.DisabledPetSkins.Contains(skin.Id));
+            toggle.PropertyChanged += (_, _) => DetectChanges();
+            PetSkinToggles.Add(toggle);
+        }
+
         // Snapshot
         _initialHooksEnabled = HooksEnabled;
         _initialPermissionPopups = PermissionPopupsEnabled;
@@ -91,8 +110,17 @@ public partial class HooksSettingsViewModel : ObservableObject
         _initialNotifyConfigChange = NotifyConfigChange;
         _initialNotifySessionLifecycle = NotifySessionLifecycle;
         _initialNotifySubagent = NotifySubagent;
+        _initialPetSpeedMultiplier = PetSpeedMultiplier;
+        _initialPetSleepThresholdMinutes = PetSleepThresholdMinutes;
+        _initialDisabledPetSkins = CurrentDisabledSkinIds();
         _initialized = true;
     }
+
+    private static string FormatSkinName(string id) =>
+        id.Length == 0 ? id : char.ToUpperInvariant(id[0]) + id[1..];
+
+    private List<string> CurrentDisabledSkinIds() =>
+        PetSkinToggles.Where(t => !t.IsEnabled).Select(t => t.Id).OrderBy(id => id).ToList();
 
     public void CheckInstallStatus()
     {
@@ -133,6 +161,8 @@ public partial class HooksSettingsViewModel : ObservableObject
     partial void OnNotifyConfigChangeChanged(bool value) => DetectChanges();
     partial void OnNotifySessionLifecycleChanged(bool value) => DetectChanges();
     partial void OnNotifySubagentChanged(bool value) => DetectChanges();
+    partial void OnPetSpeedMultiplierChanged(double value) => DetectChanges();
+    partial void OnPetSleepThresholdMinutesChanged(double value) => DetectChanges();
 
     private void DetectChanges()
     {
@@ -151,7 +181,10 @@ public partial class HooksSettingsViewModel : ObservableObject
             NotifyIdle != _initialNotifyIdle ||
             NotifyConfigChange != _initialNotifyConfigChange ||
             NotifySessionLifecycle != _initialNotifySessionLifecycle ||
-            NotifySubagent != _initialNotifySubagent;
+            NotifySubagent != _initialNotifySubagent ||
+            PetSpeedMultiplier != _initialPetSpeedMultiplier ||
+            PetSleepThresholdMinutes != _initialPetSleepThresholdMinutes ||
+            !CurrentDisabledSkinIds().SequenceEqual(_initialDisabledPetSkins);
     }
 
     [RelayCommand]
@@ -175,6 +208,10 @@ public partial class HooksSettingsViewModel : ObservableObject
         settings.HookNotificationPreferences["configChange"] = NotifyConfigChange;
         settings.HookNotificationPreferences["sessionLifecycle"] = NotifySessionLifecycle;
         settings.HookNotificationPreferences["subagent"] = NotifySubagent;
+
+        settings.PetSpeedMultiplier = PetSpeedMultiplier;
+        settings.PetSleepThresholdMinutes = PetSleepThresholdMinutes;
+        settings.DisabledPetSkins = CurrentDisabledSkinIds();
 
         _settingsService.Save();
         _activityService.TrimToMax(MaxFeedEntries);
@@ -210,6 +247,15 @@ public partial class HooksSettingsViewModel : ObservableObject
         _initialNotifyConfigChange = NotifyConfigChange;
         _initialNotifySessionLifecycle = NotifySessionLifecycle;
         _initialNotifySubagent = NotifySubagent;
+        _initialPetSpeedMultiplier = PetSpeedMultiplier;
+        _initialPetSleepThresholdMinutes = PetSleepThresholdMinutes;
+        _initialDisabledPetSkins = CurrentDisabledSkinIds();
         HasUnsavedChanges = false;
+    }
+
+    [RelayCommand]
+    private void ResetPetsPosition()
+    {
+        App.Services.GetRequiredService<TrayIconManager>().ResetPetsPosition();
     }
 }

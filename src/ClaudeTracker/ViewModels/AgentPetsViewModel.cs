@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using ClaudeTracker.Models;
 using ClaudeTracker.Services.Interfaces;
 using ClaudeTracker.Utilities;
 
@@ -10,6 +11,7 @@ namespace ClaudeTracker.ViewModels;
 public partial class AgentPetsViewModel : ObservableObject
 {
     private readonly ISessionTrackingService _sessionTracking;
+    private readonly ISettingsService _settingsService;
     private readonly Random _random = new();
     private int _nextSkinIndex;
 
@@ -19,11 +21,28 @@ public partial class AgentPetsViewModel : ObservableObject
 
     public event EventHandler? PetsCountChanged;
 
-    public AgentPetsViewModel(ISessionTrackingService sessionTracking)
+    public AgentPetsViewModel(ISessionTrackingService sessionTracking, ISettingsService settingsService)
     {
         _sessionTracking = sessionTracking;
+        _settingsService = settingsService;
         _sessionTracking.SessionsChanged += (_, _) => SyncPets();
+        _settingsService.SettingsChanged += (_, _) => RefreshRuntimeSettings();
+        RefreshRuntimeSettings();
         SyncPets();
+    }
+
+    private void RefreshRuntimeSettings()
+    {
+        var settings = _settingsService.Settings;
+        PetRuntimeSettings.SpeedMultiplier = settings.PetSpeedMultiplier;
+        PetRuntimeSettings.SleepThresholdMinutes = settings.PetSleepThresholdMinutes;
+    }
+
+    private PetSkin[] EnabledSkins()
+    {
+        var disabled = _settingsService.Settings.DisabledPetSkins;
+        var enabled = PetSkins.All.Where(s => !disabled.Contains(s.Id)).ToArray();
+        return enabled.Length > 0 ? enabled : PetSkins.All;
     }
 
     /// <summary>Diff Pets against ActiveSessions by SessionId. Runs on the UI thread
@@ -39,6 +58,7 @@ public partial class AgentPetsViewModel : ObservableObject
                 Pets.RemoveAt(i);
         }
 
+        var skins = EnabledSkins();
         foreach (var session in sessions)
         {
             var pet = Pets.FirstOrDefault(p => p.SessionId == session.SessionId);
@@ -46,7 +66,7 @@ public partial class AgentPetsViewModel : ObservableObject
             {
                 pet = new AgentPetViewModel(session.SessionId)
                 {
-                    SkinId = PetSkins.All[_nextSkinIndex++ % PetSkins.All.Length].Id,
+                    SkinId = skins[_nextSkinIndex++ % skins.Length].Id,
                     X = _random.NextDouble() * (Constants.Pets.WindowWidth - Constants.Pets.PetWidth),
                     FacingRight = _random.Next(2) == 0,
                     SpeedJitter = 0.8 + _random.NextDouble() * 0.4

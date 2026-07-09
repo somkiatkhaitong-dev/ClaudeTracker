@@ -81,7 +81,7 @@ public partial class AgentPetsWindow : Window
             if (pet.State == PetState.Sleeping) continue;
 
             var speed = pet.State == PetState.Working ? Constants.Pets.WorkingSpeed : Constants.Pets.IdleSpeed;
-            var next = pet.X + (pet.FacingRight ? 1 : -1) * speed * pet.SpeedJitter;
+            var next = pet.X + (pet.FacingRight ? 1 : -1) * speed * pet.SpeedJitter * PetRuntimeSettings.SpeedMultiplier;
 
             if (next <= 0) { next = 0; pet.FacingRight = true; }
             else if (next >= maxX) { next = maxX; pet.FacingRight = false; }
