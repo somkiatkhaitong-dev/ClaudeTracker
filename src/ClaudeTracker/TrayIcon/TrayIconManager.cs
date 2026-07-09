@@ -27,6 +27,8 @@ public class TrayIconManager : IDisposable
 
     // Custom tooltip (bypasses Hardcodet's broken DPI-scaled tooltip positioning)
     private Window? _tooltipWindow;
+    private bool _tooltipDisabled;
+    private bool _isTooltipShowing;
     private TextBlock? _tooltipTextBlock;
     private string _tooltipText = "Claude Tracker - Claude Usage Monitor";
     private POINT _tooltipAnchor;
@@ -48,17 +50,25 @@ public class TrayIconManager : IDisposable
             Application.Current.Dispatcher.Invoke(() => ShowPopover());
         _tooltipPollTimer.Tick += (_, _) =>
         {
-            // Hide when context menu is open or cursor moves away from the icon area
-            if (_trayIcon?.ContextMenu is { IsOpen: true })
+            try
             {
-                HideTooltip();
-                return;
+                // Hide when context menu is open or cursor moves away from the icon area
+                if (_trayIcon?.ContextMenu is { IsOpen: true })
+                {
+                    HideTooltip();
+                    return;
+                }
+                GetCursorPos(out var now);
+                var dx = Math.Abs(now.X - _tooltipAnchor.X);
+                var dy = Math.Abs(now.Y - _tooltipAnchor.Y);
+                if (dx > 40 || dy > 40)
+                    HideTooltip();
             }
-            GetCursorPos(out var now);
-            var dx = Math.Abs(now.X - _tooltipAnchor.X);
-            var dy = Math.Abs(now.Y - _tooltipAnchor.Y);
-            if (dx > 40 || dy > 40)
-                HideTooltip();
+            catch (Exception ex)
+            {
+                _tooltipPollTimer.Stop();
+                LoggingService.Instance.LogError("Tooltip poll failed", ex);
+            }
         };
     }
 
@@ -431,11 +441,31 @@ public class TrayIconManager : IDisposable
             return;
 
         // Record anchor position on first show
+        // Window.Show() pumps queued messages, so tray mouse-move events can re-enter
+        // this handler mid-Show and call Show() again on the half-initialized window.
+        if (_tooltipDisabled || _isTooltipShowing)
+            return;
+
         if (_tooltipWindow == null || !_tooltipWindow.IsVisible)
         {
             GetCursorPos(out _tooltipAnchor);
-            ShowTooltip();
-            _tooltipPollTimer.Start();
+            _isTooltipShowing = true;
+            try
+            {
+                ShowTooltip();
+                _tooltipPollTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                // Tooltip is cosmetic — never let it take down the app.
+                LoggingService.Instance.LogWarning($"Tooltip disabled after failure: {ex.Message}");
+                _tooltipDisabled = true;
+                _tooltipWindow = null;
+            }
+            finally
+            {
+                _isTooltipShowing = false;
+            }
         }
     }
 
@@ -453,6 +483,7 @@ public class TrayIconManager : IDisposable
             {
                 WindowStyle = WindowStyle.None,
                 AllowsTransparency = true,
+                ShowActivated = false,
                 Background = Brushes.Transparent,
                 ShowInTaskbar = false,
                 Topmost = true,
