@@ -41,6 +41,7 @@ public class SessionTrackingService : ISessionTrackingService
                     ConsoleWindowHandle = consoleWindowHandle
                 };
                 ActiveSessions.Add(session);
+                LoggingService.Instance.Log($"Session registered: {session.ProjectName} ({sessionId[..Math.Min(8, sessionId.Length)]})");
             }
             SessionsChanged?.Invoke(this, EventArgs.Empty);
         });
@@ -77,6 +78,7 @@ public class SessionTrackingService : ISessionTrackingService
                 if (session != null)
                 {
                     ActiveSessions.Remove(session);
+                    LoggingService.Instance.Log($"Session ended: {session.ProjectName}");
                 }
             }
             SessionsChanged?.Invoke(this, EventArgs.Empty);
