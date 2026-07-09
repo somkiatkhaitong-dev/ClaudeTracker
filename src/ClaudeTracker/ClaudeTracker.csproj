@@ -9,9 +9,9 @@
     <ApplicationIcon>Assets\app_icon.ico</ApplicationIcon>
     <AssemblyName>ClaudeTracker</AssemblyName>
     <RootNamespace>ClaudeTracker</RootNamespace>
-    <Version>2.3.0-local.1</Version>
+    <Version>2.3.0-local.2</Version>
     <AssemblyVersion>2.3.0.0</AssemblyVersion>
-    <FileVersion>2.3.0.1</FileVersion>
+    <FileVersion>2.3.0.2</FileVersion>
     <Description>Claude AI Usage Tracker for Windows</Description>
     <Authors>TobiiNT</Authors>
     <Company>Tobii Development</Company>
