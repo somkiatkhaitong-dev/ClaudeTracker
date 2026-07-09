@@ -20,7 +20,7 @@ public partial class AgentPetViewModel : ObservableObject
     [ObservableProperty] private string _projectName = "";
     [ObservableProperty] private string _currentActivity = "";
     [ObservableProperty] private int _subagentCount;
-    [ObservableProperty] private string _colorToken = "AccentBlue";
+    [ObservableProperty] private string _skinId = "lumig";
     [ObservableProperty] private double _x;
     [ObservableProperty] private bool _facingRight = true;
     [ObservableProperty] private string _tooltipText = "";

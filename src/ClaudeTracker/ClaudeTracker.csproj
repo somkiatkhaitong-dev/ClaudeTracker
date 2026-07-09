@@ -57,6 +57,9 @@
   <ItemGroup>
     <Content Include="Assets\app_icon.ico" />
     <Resource Include="Assets\pet_lumig.png" />
+    <Resource Include="Assets\pet_bee_idle.png" />
+    <Resource Include="Assets\pet_bee_sleeping.png" />
+    <Resource Include="Assets\pet_bee_working.png" />
   </ItemGroup>
 
   <!-- Copy HookBridge exe to output directory alongside main app -->
