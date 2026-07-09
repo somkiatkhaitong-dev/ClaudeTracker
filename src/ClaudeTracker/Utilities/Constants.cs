@@ -116,7 +116,7 @@ public static class Constants
         public const double IdleSpeed = 0.6;
         public const double WindowWidth = 320;
         public const double WindowHeight = 140;
-        public const double PetWidth = 56;
+        public const double PetWidth = 96;
     }
 
     public static class Hooks
