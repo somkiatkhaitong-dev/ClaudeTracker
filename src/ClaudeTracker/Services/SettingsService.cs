@@ -35,7 +35,10 @@ public class SettingsService : ISettingsService
             try
             {
                 var json = JsonSerializer.Serialize(Settings, _jsonOptions);
-                File.WriteAllText(_settingsPath, json);
+                // Write to a temp file first so a crash mid-write can't truncate settings.json
+                var tempPath = _settingsPath + ".tmp";
+                File.WriteAllText(tempPath, json);
+                File.Move(tempPath, _settingsPath, overwrite: true);
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -65,8 +68,24 @@ public class SettingsService : ISettingsService
             catch (Exception ex)
             {
                 LoggingService.Instance.LogError($"Failed to load settings: {ex.Message}");
+                BackupCorruptSettings();
                 Settings = new AppSettings();
             }
+        }
+    }
+
+    private void BackupCorruptSettings()
+    {
+        try
+        {
+            if (!File.Exists(_settingsPath)) return;
+            var backupPath = $"{_settingsPath}.corrupt-{DateTime.UtcNow:yyyyMMdd-HHmmss}";
+            File.Copy(_settingsPath, backupPath, overwrite: true);
+            LoggingService.Instance.LogWarning($"Unreadable settings backed up to {backupPath} before reset");
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Instance.LogError($"Failed to back up corrupt settings: {ex.Message}");
         }
     }
 
