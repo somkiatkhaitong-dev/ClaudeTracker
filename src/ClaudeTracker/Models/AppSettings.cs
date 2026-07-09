@@ -53,6 +53,15 @@ public class AppSettings
     [JsonPropertyName("agentPetsWindowTop")]
     public double? AgentPetsWindowTop { get; set; }
 
+    [JsonPropertyName("disabledPetSkins")]
+    public List<string> DisabledPetSkins { get; set; } = new();
+
+    [JsonPropertyName("petSpeedMultiplier")]
+    public double PetSpeedMultiplier { get; set; } = 1.0;
+
+    [JsonPropertyName("petSleepThresholdMinutes")]
+    public double PetSleepThresholdMinutes { get; set; } = 2.0;
+
     [JsonPropertyName("hasStarredGitHub")]
     public bool HasStarredGitHub { get; set; }
 

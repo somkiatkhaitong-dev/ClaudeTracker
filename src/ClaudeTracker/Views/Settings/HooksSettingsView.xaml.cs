@@ -107,6 +107,29 @@ public partial class HooksSettingsView : UserControl
             MaxFeedValueText.Text = $"{(int)e.NewValue}";
         };
 
+        // Desktop Pets
+        PetSkinList.ItemsSource = _vm.PetSkinToggles;
+
+        PetSpeedSlider.PreviewMouseWheel += ScrollHelper.RouteMouseWheelToParent;
+        PetSpeedSlider.Value = _vm.PetSpeedMultiplier;
+        PetSpeedValueText.Text = $"{_vm.PetSpeedMultiplier:0.00}x";
+        PetSpeedSlider.ValueChanged += (_, e) =>
+        {
+            _vm.PetSpeedMultiplier = e.NewValue;
+            PetSpeedValueText.Text = $"{e.NewValue:0.00}x";
+        };
+
+        PetSleepSlider.PreviewMouseWheel += ScrollHelper.RouteMouseWheelToParent;
+        PetSleepSlider.Value = _vm.PetSleepThresholdMinutes;
+        PetSleepValueText.Text = $"{_vm.PetSleepThresholdMinutes:0}m";
+        PetSleepSlider.ValueChanged += (_, e) =>
+        {
+            _vm.PetSleepThresholdMinutes = e.NewValue;
+            PetSleepValueText.Text = $"{e.NewValue:0}m";
+        };
+
+        ResetPetsPositionButton.Click += (_, _) => _vm.ResetPetsPositionCommand.Execute(null);
+
         // Install / Uninstall buttons
         InstallButton.Click += async (_, _) => { await RunBridgeCommandAsync("install"); _vm.CheckInstallStatus(); UpdateInstallUI(); };
         UninstallButton.Click += async (_, _) => { await RunBridgeCommandAsync("uninstall"); _vm.CheckInstallStatus(); UpdateInstallUI(); };

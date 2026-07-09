@@ -137,6 +137,52 @@
                 </Grid>
             </StackPanel>
 
+            <!-- Desktop Pets -->
+            <TextBlock Text="DESKTOP PETS" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,8" />
+            <TextBlock Text="Characters" FontSize="13" Margin="0,6,0,4" />
+            <ItemsControl x:Name="PetSkinList" Margin="0,0,0,14">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,4,0,4">
+                            <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontSize="13" />
+                            <ToggleButton HorizontalAlignment="Right" VerticalAlignment="Center"
+                                          Style="{StaticResource CompactSwitch}"
+                                          IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="Walking Speed" FontSize="13" Margin="0,0,0,4" />
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="60" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="PetSpeedSlider" Minimum="0.5" Maximum="2.5"
+                        TickFrequency="0.25" IsSnapToTickEnabled="True"
+                        TickPlacement="BottomRight" IsMoveToPointEnabled="True" />
+                <TextBlock Grid.Column="1" x:Name="PetSpeedValueText" FontSize="13"
+                           VerticalAlignment="Center" HorizontalAlignment="Center" />
+            </Grid>
+
+            <TextBlock Text="Sleep After (minutes)" FontSize="13" Margin="0,0,0,4" />
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="60" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="PetSleepSlider" Minimum="1" Maximum="10"
+                        TickFrequency="1" IsSnapToTickEnabled="True"
+                        TickPlacement="BottomRight" IsMoveToPointEnabled="True" />
+                <TextBlock Grid.Column="1" x:Name="PetSleepValueText" FontSize="13"
+                           VerticalAlignment="Center" HorizontalAlignment="Center" />
+            </Grid>
+
+            <Button x:Name="ResetPetsPositionButton" Content="Reset Window Position"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    HorizontalAlignment="Left" Height="34" FontSize="12" Margin="0,0,0,20" />
+
             </StackPanel>
 
             <!-- Save -->

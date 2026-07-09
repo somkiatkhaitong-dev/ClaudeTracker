@@ -53,7 +53,7 @@ public partial class AgentPetViewModel : ObservableObject
     {
         var idle = DateTime.UtcNow - lastActivityUtc;
         if (idle.TotalSeconds < Constants.Pets.WorkingThresholdSeconds) return PetState.Working;
-        if (idle.TotalMinutes > Constants.Pets.SleepThresholdMinutes) return PetState.Sleeping;
+        if (idle.TotalMinutes > PetRuntimeSettings.SleepThresholdMinutes) return PetState.Sleeping;
         return PetState.Idle;
     }
 }
