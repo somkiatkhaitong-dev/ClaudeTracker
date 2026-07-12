@@ -472,15 +472,7 @@ public class TrayIconManager : IDisposable
 
     private void ShowPetsWindow()
     {
-        if (_petsWindow == null)
-        {
-            _petsWindow = new AgentPetsWindow();
-            _petsWindow.CloseRequested += (_, _) =>
-            {
-                ToggleAgentPets(false);
-                UpdatePetsMenuCheckmark(false);
-            };
-        }
+        _petsWindow ??= new AgentPetsWindow();
 
         if (!_petsWindow.IsVisible)
         {
@@ -502,16 +494,11 @@ public class TrayIconManager : IDisposable
         }
     }
 
-    /// <summary>Clears the saved pets window position and, if the window is currently
-    /// visible, snaps it back to the default corner immediately.</summary>
+    /// <summary>Clears every pet's saved drag position and snaps active pets back to
+    /// their default spot along the bottom of the screen.</summary>
     public void ResetPetsPosition()
     {
-        _settingsService.Settings.AgentPetsWindowLeft = null;
-        _settingsService.Settings.AgentPetsWindowTop = null;
-        _settingsService.Save();
-
-        if (_petsWindow is { IsVisible: true })
-            _petsWindow.RestorePosition();
+        App.Services.GetRequiredService<ViewModels.AgentPetsViewModel>().ResetAllPositions();
     }
 
     #endregion

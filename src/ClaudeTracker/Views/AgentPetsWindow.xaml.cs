@@ -1,5 +1,6 @@
+using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,9 +13,12 @@ namespace ClaudeTracker.Views;
 
 public partial class AgentPetsWindow : Window
 {
+    private const int WM_NCHITTEST = 0x0084;
+    private const int HTCLIENT = 1;
+    private const int HTTRANSPARENT = -1;
+    private const double HitTestPadding = 6; // easier to grab a pet without pixel-perfect aim
+
     private readonly AgentPetsViewModel _viewModel;
-    private readonly ISettingsService _settingsService;
-    private readonly DispatcherTimer _saveTimer;
     private readonly DispatcherTimer _walkTimer;
     private readonly DispatcherTimer _stateTimer;
 
@@ -23,15 +27,8 @@ public partial class AgentPetsWindow : Window
         InitializeComponent();
 
         _viewModel = App.Services.GetRequiredService<AgentPetsViewModel>();
-        _settingsService = App.Services.GetRequiredService<ISettingsService>();
         DataContext = _viewModel;
         PetsHost.ItemsSource = _viewModel.Pets;
-
-        CloseButton.Click += (_, _) => CloseRequested?.Invoke(this, EventArgs.Empty);
-
-        _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); SavePosition(); };
-        LocationChanged += (_, _) => { _saveTimer.Stop(); _saveTimer.Start(); };
 
         // One timer walks every pet; storyboards only handle per-pet micro-animation
         _walkTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(Constants.Pets.FrameIntervalMs) };
@@ -51,37 +48,65 @@ public partial class AgentPetsWindow : Window
             if (IsVisible && _viewModel.Pets.Count > 0 && !_walkTimer.IsEnabled) StartAnimations();
             else if (_viewModel.Pets.Count == 0) StopAnimations();
         };
+
+        SourceInitialized += (_, _) =>
+        {
+            if (PresentationSource.FromVisual(this) is HwndSource source)
+                source.AddHook(WndProc);
+        };
     }
 
-    public event EventHandler? CloseRequested;
-
+    /// <summary>Sizes/positions the overlay to cover the primary monitor's work area.
+    /// Called once on show — the window itself is never user-moved anymore (individual
+    /// pets are dragged instead), so there's nothing to persist here.</summary>
     public void RestorePosition()
     {
-        var settings = _settingsService.Settings;
         var workArea = SystemParameters.WorkArea;
-
-        if (settings.AgentPetsWindowLeft.HasValue && settings.AgentPetsWindowTop.HasValue)
-        {
-            Left = Math.Clamp(settings.AgentPetsWindowLeft.Value, workArea.Left, workArea.Right - Width);
-            Top = Math.Clamp(settings.AgentPetsWindowTop.Value, workArea.Top, workArea.Bottom - Height);
-        }
-        else
-        {
-            // Default to the left of the floating usage widget's spot
-            Left = workArea.Right - Width - 340;
-            Top = workArea.Bottom - Height - 20;
-        }
+        Left = workArea.Left;
+        Top = workArea.Top;
+        Width = workArea.Width;
+        Height = workArea.Height;
     }
+
+    /// <summary>Click-through everywhere except directly over a pet: WM_NCHITTEST is sent
+    /// on every mouse move over the window, so this must stay cheap (a handful of pets,
+    /// simple rect checks). Returning HTTRANSPARENT lets the click fall through to
+    /// whatever's beneath (desktop icons, other app windows); HTCLIENT over a pet lets
+    /// normal WPF mouse events (including the drag handlers in AgentPetControl) fire.</summary>
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg != WM_NCHITTEST) return IntPtr.Zero;
+
+        var screenPoint = new Point(GetX(lParam), GetY(lParam));
+        var clientPoint = PointFromScreen(screenPoint);
+
+        foreach (var pet in _viewModel.Pets)
+        {
+            var rect = new Rect(
+                pet.X - HitTestPadding, pet.Y - HitTestPadding,
+                Constants.Pets.PetWidth + 2 * HitTestPadding, Constants.Pets.PetHeight + 2 * HitTestPadding);
+            if (rect.Contains(clientPoint))
+            {
+                handled = true;
+                return new IntPtr(HTCLIENT);
+            }
+        }
+
+        handled = true;
+        return new IntPtr(HTTRANSPARENT);
+    }
+
+    private static int GetX(IntPtr lParam) => unchecked((short)((long)lParam & 0xFFFF));
+    private static int GetY(IntPtr lParam) => unchecked((short)(((long)lParam >> 16) & 0xFFFF));
 
     private void WalkTick()
     {
-        var maxX = Math.Max(0, RootGrid.ActualWidth - Constants.Pets.PetWidth);
+        var maxX = Math.Max(0, ActualWidth - Constants.Pets.PetWidth);
         foreach (var pet in _viewModel.Pets)
         {
-            if (pet.State == PetState.Sleeping) continue;
+            if (pet.IsDragging || pet.State != PetState.Working) continue;
 
-            var speed = pet.State == PetState.Working ? Constants.Pets.WorkingSpeed : Constants.Pets.IdleSpeed;
-            var next = pet.X + (pet.FacingRight ? 1 : -1) * speed * pet.SpeedJitter * PetRuntimeSettings.SpeedMultiplier;
+            var next = pet.X + (pet.FacingRight ? 1 : -1) * Constants.Pets.WorkingSpeed * pet.SpeedJitter * PetRuntimeSettings.SpeedMultiplier;
 
             if (next <= 0) { next = 0; pet.FacingRight = true; }
             else if (next >= maxX) { next = maxX; pet.FacingRight = false; }
@@ -125,18 +150,5 @@ public partial class AgentPetsWindow : Window
             if (FindPetControl(child) is { } nested) return nested;
         }
         return null;
-    }
-
-    private void GroundStrip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ButtonState == MouseButtonState.Pressed)
-            DragMove();
-    }
-
-    private void SavePosition()
-    {
-        _settingsService.Settings.AgentPetsWindowLeft = Left;
-        _settingsService.Settings.AgentPetsWindowTop = Top;
-        _settingsService.Save();
     }
 }

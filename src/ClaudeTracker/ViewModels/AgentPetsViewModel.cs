@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ClaudeTracker.Models;
 using ClaudeTracker.Services.Interfaces;
@@ -8,10 +9,12 @@ namespace ClaudeTracker.ViewModels;
 
 /// <summary>Maintains one pet per active Claude Code session, diffing by SessionId
 /// so walk position and facing survive session updates.</summary>
-public partial class AgentPetsViewModel : ObservableObject
+public partial class AgentPetsViewModel : ObservableObject, IDisposable
 {
     private readonly ISessionTrackingService _sessionTracking;
     private readonly ISettingsService _settingsService;
+    private readonly IProfileService _profileService;
+    private readonly IUsageRefreshCoordinator _refreshCoordinator;
     private readonly Random _random = new();
     private int _nextSkinIndex;
 
@@ -21,14 +24,43 @@ public partial class AgentPetsViewModel : ObservableObject
 
     public event EventHandler? PetsCountChanged;
 
-    public AgentPetsViewModel(ISessionTrackingService sessionTracking, ISettingsService settingsService)
+    public AgentPetsViewModel(
+        ISessionTrackingService sessionTracking,
+        ISettingsService settingsService,
+        IProfileService profileService,
+        IUsageRefreshCoordinator refreshCoordinator)
     {
         _sessionTracking = sessionTracking;
         _settingsService = settingsService;
+        _profileService = profileService;
+        _refreshCoordinator = refreshCoordinator;
         _sessionTracking.SessionsChanged += (_, _) => SyncPets();
         _settingsService.SettingsChanged += (_, _) => RefreshRuntimeSettings();
+        _refreshCoordinator.RefreshCompleted += OnUsageUpdated;
+        _profileService.ActiveProfileChanged += OnActiveProfileChanged;
         RefreshRuntimeSettings();
         SyncPets();
+    }
+
+    private void OnUsageUpdated(object? sender, EventArgs e) => RefreshEvolutionStages();
+    private void OnActiveProfileChanged(object? sender, Profile? profile) => RefreshEvolutionStages();
+
+    /// <summary>Recompute every pet's evolution stage from the current Session usage %.
+    /// Session % is per-PROFILE while pets are per-SESSION/project — since there's no
+    /// session-to-profile mapping today, all pets evolve together off the single active
+    /// profile's usage. Accepted simplification.</summary>
+    private void RefreshEvolutionStages()
+    {
+        var sessionPct = _profileService.ActiveProfile?.ClaudeUsage?.EffectiveSessionPercentage ?? 0.0;
+        var stage = PetEvolution.StageForPercentage(sessionPct);
+        foreach (var pet in Pets)
+            pet.EvolutionStage = stage;
+    }
+
+    public void Dispose()
+    {
+        _refreshCoordinator.RefreshCompleted -= OnUsageUpdated;
+        _profileService.ActiveProfileChanged -= OnActiveProfileChanged;
     }
 
     private void RefreshRuntimeSettings()
@@ -38,23 +70,30 @@ public partial class AgentPetsViewModel : ObservableObject
         PetRuntimeSettings.SleepThresholdMinutes = settings.PetSleepThresholdMinutes;
     }
 
-    private string ResolveSkinId(string cwd, PetSkin[] enabledSkins)
+    private string ResolveSkinId(string cwd, PetSkin[] enabledFamilies)
     {
         if (!string.IsNullOrEmpty(cwd) &&
             _settingsService.Settings.ProjectSkinAssignments.TryGetValue(cwd, out var assignedId) &&
-            enabledSkins.Any(s => s.Id == assignedId))
+            enabledFamilies.Any(s => s.EffectiveFamilyId == assignedId))
         {
             return assignedId;
         }
 
-        return enabledSkins[_nextSkinIndex++ % enabledSkins.Length].Id;
+        return enabledFamilies[_nextSkinIndex++ % enabledFamilies.Length].EffectiveFamilyId;
     }
 
+    /// <summary>One representative (stage 1) PetSkin per character family — evolution
+    /// stages of the same family (e.g. angel_chick_stage1..6) are never treated as
+    /// separate characters for round-robin/pinning/disabling purposes.</summary>
     private PetSkin[] EnabledSkins()
     {
         var disabled = _settingsService.Settings.DisabledPetSkins;
-        var enabled = PetSkins.All.Where(s => !disabled.Contains(s.Id)).ToArray();
-        return enabled.Length > 0 ? enabled : PetSkins.All;
+        var families = PetSkins.All
+            .GroupBy(s => s.EffectiveFamilyId)
+            .Select(g => g.OrderBy(s => s.Stage).First())
+            .ToArray();
+        var enabled = families.Where(s => !disabled.Contains(s.EffectiveFamilyId)).ToArray();
+        return enabled.Length > 0 ? enabled : families;
     }
 
     /// <summary>Diff Pets against ActiveSessions by SessionId. Runs on the UI thread
@@ -71,15 +110,21 @@ public partial class AgentPetsViewModel : ObservableObject
         }
 
         var skins = EnabledSkins();
+        var workArea = SystemParameters.WorkArea;
         foreach (var session in sessions)
         {
             var pet = Pets.FirstOrDefault(p => p.SessionId == session.SessionId);
             if (pet == null)
             {
+                var (defaultX, defaultY) = DefaultSpawnPosition(workArea);
+                PetPosition? saved = null;
+                var hasSaved = !string.IsNullOrEmpty(session.Cwd) &&
+                    _settingsService.Settings.ProjectPetPositions.TryGetValue(session.Cwd, out saved);
                 pet = new AgentPetViewModel(session.SessionId)
                 {
                     SkinId = ResolveSkinId(session.Cwd, skins),
-                    X = _random.NextDouble() * (Constants.Pets.WindowWidth - Constants.Pets.PetWidth),
+                    X = hasSaved ? saved!.X : defaultX,
+                    Y = hasSaved ? saved!.Y : defaultY,
                     FacingRight = _random.Next(2) == 0,
                     SpeedJitter = 0.8 + _random.NextDouble() * 0.4
                 };
@@ -91,6 +136,7 @@ public partial class AgentPetsViewModel : ObservableObject
         HasPets = Pets.Count > 0;
         if (Pets.Count != previousCount)
             PetsCountChanged?.Invoke(this, EventArgs.Empty);
+        RefreshEvolutionStages();
     }
 
     /// <summary>Recompute pet states from cached activity times — Working→Idle→Sleeping
@@ -99,5 +145,34 @@ public partial class AgentPetsViewModel : ObservableObject
     {
         foreach (var pet in Pets)
             pet.RefreshState();
+    }
+
+    private (double X, double Y) DefaultSpawnPosition(Rect workArea) => (
+        _random.NextDouble() * (workArea.Width - Constants.Pets.PetWidth),
+        workArea.Height - Constants.Pets.PetHeight - 14);
+
+    /// <summary>Persists a pet's dragged-to position keyed by its project, so it reappears
+    /// there across restarts. No-op for pets with no known Cwd (mirrors ResolveSkinId).</summary>
+    public void SavePetPosition(AgentPetViewModel pet)
+    {
+        if (string.IsNullOrEmpty(pet.Cwd)) return;
+        _settingsService.Settings.ProjectPetPositions[pet.Cwd] = new PetPosition(pet.X, pet.Y);
+        _settingsService.Save();
+    }
+
+    /// <summary>Clears all saved drag positions and snaps active pets back to their
+    /// default spawn spot along the bottom of the screen.</summary>
+    public void ResetAllPositions()
+    {
+        _settingsService.Settings.ProjectPetPositions.Clear();
+        _settingsService.Save();
+
+        var workArea = SystemParameters.WorkArea;
+        foreach (var pet in Pets)
+        {
+            var (x, y) = DefaultSpawnPosition(workArea);
+            pet.X = x;
+            pet.Y = y;
+        }
     }
 }

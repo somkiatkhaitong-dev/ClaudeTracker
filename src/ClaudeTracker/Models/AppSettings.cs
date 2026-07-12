@@ -67,6 +67,11 @@ public class AppSettings
     [JsonPropertyName("projectSkinAssignments")]
     public Dictionary<string, string> ProjectSkinAssignments { get; set; } = new();
 
+    /// <summary>Project folder (session Cwd) → last dragged-to screen position, so a pet
+    /// reappears where the user left it across app restarts.</summary>
+    [JsonPropertyName("projectPetPositions")]
+    public Dictionary<string, PetPosition> ProjectPetPositions { get; set; } = new();
+
     [JsonPropertyName("hasStarredGitHub")]
     public bool HasStarredGitHub { get; set; }
 
@@ -135,3 +140,7 @@ public class AppSettings
         ["subagent"] = false
     };
 }
+
+/// <summary>Screen coordinates (WPF device-independent units, relative to the primary
+/// monitor's work area) where a desktop pet was last dragged to.</summary>
+public record PetPosition(double X, double Y);

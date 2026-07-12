@@ -20,10 +20,20 @@ public partial class AgentPetViewModel : ObservableObject
     [ObservableProperty] private string _projectName = "";
     [ObservableProperty] private string _currentActivity = "";
     [ObservableProperty] private int _subagentCount;
-    [ObservableProperty] private string _skinId = "lumig";
+    [ObservableProperty] private string _skinId = "angel_chick";
+    [ObservableProperty] private int _evolutionStage = PetEvolution.MinStage;
     [ObservableProperty] private double _x;
+    [ObservableProperty] private double _y;
     [ObservableProperty] private bool _facingRight = true;
     [ObservableProperty] private string _tooltipText = "";
+
+    /// <summary>True while the user is actively dragging this pet — <c>WalkTick</c> skips
+    /// it so the 33ms walk timer doesn't fight the live drag.</summary>
+    public bool IsDragging { get; set; }
+
+    /// <summary>Session working directory, used to key <see cref="PetPosition"/>
+    /// persistence — durable across restarts, unlike <see cref="SessionId"/>.</summary>
+    public string Cwd { get; private set; } = "";
 
     /// <summary>Per-pet walk speed variation (0.8–1.2) so pets don't move in lockstep.</summary>
     public double SpeedJitter { get; set; } = 1.0;
@@ -37,6 +47,7 @@ public partial class AgentPetViewModel : ObservableObject
 
     public void UpdateFrom(SessionState session)
     {
+        Cwd = session.Cwd;
         ProjectName = session.ProjectName;
         CurrentActivity = session.CurrentActivity;
         SubagentCount = session.ActiveSubagents.Count;
