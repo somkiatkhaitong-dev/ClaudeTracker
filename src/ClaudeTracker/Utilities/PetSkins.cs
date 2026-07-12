@@ -133,6 +133,11 @@ public static class PetSkins
         {
             "/Assets/pet_softdebut_blink1.png", "/Assets/pet_softdebut_blink2.png",
             "/Assets/pet_softdebut_blink3.png", "/Assets/pet_softdebut_blink4.png",
+        },
+        CelebrateFramePaths: new[]
+        {
+            "/Assets/pet_softdebut_celebrate1.png", "/Assets/pet_softdebut_celebrate2.png",
+            "/Assets/pet_softdebut_celebrate3.png", "/Assets/pet_softdebut_celebrate4.png",
         });
 
     public static readonly PetSkin[] All =
