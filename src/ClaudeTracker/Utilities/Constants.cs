@@ -22,7 +22,7 @@ public static class Constants
         public const string ConsoleBase = PlatformBase + "/api";
         public const string ClaudeCodeMetrics = ConsoleBase + "/claude_code/metrics_aggs";
         public const string OAuthUsage = "https://api.anthropic.com/api/oauth/usage";
-        public const string OAuthTokenEndpoint = "https://platform.claude.com/api/oauth/token";
+        public const string OAuthTokenEndpoint = "https://console.anthropic.com/v1/oauth/token";
         public const string OAuthClientId = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
     }
 
