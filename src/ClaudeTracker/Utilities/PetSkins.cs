@@ -117,18 +117,40 @@ public static class PetSkins
         },
         FamilyId: AngelChickFamily, Stage: 4);
 
+    /// <summary>Standalone skin — no evolution stages, no dedicated happy/sleep art
+    /// (idle.png is reused for both the unused WorkingImagePath fallback and, via a
+    /// duplicate file, SleepingImagePath so <c>HasDedicatedPoses</c> stays true and the
+    /// walk/blink frame timers apply).</summary>
+    private static readonly PetSkin Softdebut = new(
+        "softdebut", "/Assets/pet_softdebut_idle.png", "/Assets/pet_softdebut_idle.png", "/Assets/pet_softdebut_sleep.png",
+        WalkFramePaths: new[]
+        {
+            "/Assets/pet_softdebut_walk1.png", "/Assets/pet_softdebut_walk2.png",
+            "/Assets/pet_softdebut_walk3.png", "/Assets/pet_softdebut_walk4.png",
+            "/Assets/pet_softdebut_walk5.png", "/Assets/pet_softdebut_walk6.png",
+        },
+        BlinkFramePaths: new[]
+        {
+            "/Assets/pet_softdebut_blink1.png", "/Assets/pet_softdebut_blink2.png",
+            "/Assets/pet_softdebut_blink3.png", "/Assets/pet_softdebut_blink4.png",
+        });
+
     public static readonly PetSkin[] All =
     {
         AngelChickStage1,
         AngelChickStage2,
         AngelChickStage3,
         AngelChickStage4,
+        Softdebut,
     };
 
     /// <summary>Resolve a family + evolution stage to its PetSkin, falling back to the
-    /// family's stage 1 (then the first registered skin) if the requested stage doesn't exist.</summary>
+    /// family's stage 1 (then the first registered skin) if the requested stage doesn't exist.
+    /// Matches on <see cref="PetSkin.EffectiveFamilyId"/> (not the raw <c>FamilyId</c>) so
+    /// standalone skins — which leave <c>FamilyId</c> null and fall back to their own <c>Id</c> —
+    /// resolve correctly instead of silently falling through to <c>All[0]</c>.</summary>
     public static PetSkin ResolveStage(string familyId, int stage) =>
-        All.FirstOrDefault(s => s.FamilyId == familyId && s.Stage == stage)
-        ?? All.FirstOrDefault(s => s.FamilyId == familyId && s.Stage == 1)
+        All.FirstOrDefault(s => s.EffectiveFamilyId == familyId && s.Stage == stage)
+        ?? All.FirstOrDefault(s => s.EffectiveFamilyId == familyId && s.Stage == 1)
         ?? All[0];
 }
