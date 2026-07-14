@@ -146,12 +146,17 @@ public static class PetSkins
             "/Assets/pet_softdebut_hero_walk3.png", "/Assets/pet_softdebut_hero_walk4.png",
             "/Assets/pet_softdebut_hero_walk5.png", "/Assets/pet_softdebut_hero_walk6.png",
         },
+        // Regenerated 2026-07-14: the original 8-frame set had a baked-in art defect
+        // (crown mounting post didn't blend into the head shell — visible seam/gap) and
+        // an inconsistent crown position across frames. This 4-frame set was generated
+        // fresh with the crown/head frozen in place and only the cape animating, then
+        // background-removed, height-normalized to hero_idle.png (493px), and crown-
+        // aligned so there's zero head movement — only the cape flows. Seamless loop:
+        // frame 4 flows back into frame 1.
         HeroPowerIdleFramePaths: new[]
         {
-            "/Assets/pet_softdebut_hero_power_idle1.png", "/Assets/pet_softdebut_hero_power_idle_a1.png",
-            "/Assets/pet_softdebut_hero_power_idle_b12.png", "/Assets/pet_softdebut_hero_power_idle2.png",
-            "/Assets/pet_softdebut_hero_power_idle_b24.png", "/Assets/pet_softdebut_hero_power_idle4.png",
-            "/Assets/pet_softdebut_hero_power_idle_b41.png", "/Assets/pet_softdebut_hero_power_idle_a2.png",
+            "/Assets/pet_softdebut_hero_power_idle_gen1.png", "/Assets/pet_softdebut_hero_power_idle_gen2.png",
+            "/Assets/pet_softdebut_hero_power_idle_gen3.png", "/Assets/pet_softdebut_hero_power_idle_gen4.png",
         },
         HeroTransformFramePaths: new[]
         {

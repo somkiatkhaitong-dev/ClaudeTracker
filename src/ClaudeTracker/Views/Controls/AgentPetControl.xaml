@@ -27,10 +27,11 @@
                         <TranslateTransform x:Name="Bob"/>
                     </TransformGroup>
                 </Grid.RenderTransform>
-                <Grid.CacheMode>
-                    <BitmapCache EnableClearType="False" SnapsToDevicePixels="False" RenderAtScale="3"/>
-                </Grid.CacheMode>
 
+                <!-- No BitmapCache here: it forced a two-stage downscale (art→cache at
+                     RenderAtScale, then a bilinear cache→screen composite) that dropped the
+                     crown's thin rods. A direct HighQuality downscale of the source (set on
+                     the UserControl) renders every frame's rods cleanly. -->
                 <Image x:Name="PetImage" Width="96" Height="83" Stretch="Uniform"/>
 
                 <Canvas x:Name="EyesClosed" Visibility="Collapsed">
