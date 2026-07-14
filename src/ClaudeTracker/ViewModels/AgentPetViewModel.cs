@@ -27,6 +27,11 @@ public partial class AgentPetViewModel : ObservableObject
     [ObservableProperty] private bool _facingRight = true;
     [ObservableProperty] private string _tooltipText = "";
 
+    /// <summary>Click-to-toggle alternate form, orthogonal to <see cref="PetState"/> — a
+    /// hero pet can still be Working/Idle/Sleeping, just rendered with hero art instead of
+    /// normal art. Never persisted; always resets to false on relaunch.</summary>
+    [ObservableProperty] private bool _isHeroMode;
+
     /// <summary>True while the user is actively dragging this pet — <c>WalkTick</c> skips
     /// it so the 33ms walk timer doesn't fight the live drag.</summary>
     public bool IsDragging { get; set; }

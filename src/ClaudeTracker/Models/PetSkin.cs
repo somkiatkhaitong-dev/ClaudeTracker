@@ -21,11 +21,21 @@ public record PetSkin(
     string[]? SleepFramePaths = null,
     string[]? CelebrateFramePaths = null,
     string? FamilyId = null,
-    int Stage = 1)
+    int Stage = 1,
+    string? HeroIdleImagePath = null,
+    string[]? HeroBlinkFramePaths = null,
+    string[]? HeroWalkFramePaths = null,
+    string[]? HeroPowerIdleFramePaths = null,
+    string[]? HeroTransformFramePaths = null,
+    string[]? HeroTransformBackFramePaths = null)
 {
     public bool HasDedicatedPoses => SleepingImagePath != IdleImagePath;
 
     /// <summary>Character family for round-robin/pinning/disabling purposes. Defaults to
     /// Id so single-stage skins behave exactly as before evolution stages existed.</summary>
     public string EffectiveFamilyId => FamilyId ?? Id;
+
+    /// <summary>Whether this skin has a click-to-toggle alternate "Hero" form. Sleeping
+    /// always renders normal art regardless of Hero mode, so there is no HeroSleepFramePaths.</summary>
+    public bool HasHeroMode => HeroIdleImagePath != null;
 }

@@ -138,6 +138,30 @@ public static class PetSkins
         {
             "/Assets/pet_softdebut_celebrate1.png", "/Assets/pet_softdebut_celebrate2.png",
             "/Assets/pet_softdebut_celebrate3.png", "/Assets/pet_softdebut_celebrate4.png",
+        },
+        HeroIdleImagePath: "/Assets/pet_softdebut_hero_idle.png",
+        HeroWalkFramePaths: new[]
+        {
+            "/Assets/pet_softdebut_hero_walk1.png", "/Assets/pet_softdebut_hero_walk2.png",
+            "/Assets/pet_softdebut_hero_walk3.png", "/Assets/pet_softdebut_hero_walk4.png",
+            "/Assets/pet_softdebut_hero_walk5.png", "/Assets/pet_softdebut_hero_walk6.png",
+        },
+        HeroPowerIdleFramePaths: new[]
+        {
+            "/Assets/pet_softdebut_hero_power_idle1.png", "/Assets/pet_softdebut_hero_power_idle_a1.png",
+            "/Assets/pet_softdebut_hero_power_idle_b12.png", "/Assets/pet_softdebut_hero_power_idle2.png",
+            "/Assets/pet_softdebut_hero_power_idle_b24.png", "/Assets/pet_softdebut_hero_power_idle4.png",
+            "/Assets/pet_softdebut_hero_power_idle_b41.png", "/Assets/pet_softdebut_hero_power_idle_a2.png",
+        },
+        HeroTransformFramePaths: new[]
+        {
+            "/Assets/pet_softdebut_hero_transform1.png", "/Assets/pet_softdebut_hero_transform2.png",
+            "/Assets/pet_softdebut_hero_transform3.png", "/Assets/pet_softdebut_hero_transform4.png",
+        },
+        HeroTransformBackFramePaths: new[]
+        {
+            "/Assets/pet_softdebut_hero_transform_back1.png", "/Assets/pet_softdebut_hero_transform_back2.png",
+            "/Assets/pet_softdebut_hero_transform_back3.png", "/Assets/pet_softdebut_hero_transform_back4.png",
         });
 
     public static readonly PetSkin[] All =
