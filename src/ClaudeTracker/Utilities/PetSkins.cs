@@ -18,102 +18,102 @@ public static class PetSkins
     private const string AngelChickFamily = "angel_chick";
 
     private static readonly PetSkin AngelChickStage1 = new(
-        "angel_chick_stage1", "/Assets/pet_angel_chick_happy.png", "/Assets/pet_angel_chick_idle.png", "/Assets/pet_angel_chick_sleep.png",
+        "angel_chick_stage1", "/Assets/angel_chick/stage1/pet_angel_chick_happy.png", "/Assets/angel_chick/stage1/pet_angel_chick_idle.png", "/Assets/angel_chick/stage1/pet_angel_chick_sleep.png",
         WalkFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_walk1.png", "/Assets/pet_angel_chick_walk2.png",
-            "/Assets/pet_angel_chick_walk3.png", "/Assets/pet_angel_chick_walk4.png",
-            "/Assets/pet_angel_chick_walk5.png", "/Assets/pet_angel_chick_walk6.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_walk1.png", "/Assets/angel_chick/stage1/pet_angel_chick_walk2.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_walk3.png", "/Assets/angel_chick/stage1/pet_angel_chick_walk4.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_walk5.png", "/Assets/angel_chick/stage1/pet_angel_chick_walk6.png",
         },
         BlinkFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_blink1.png", "/Assets/pet_angel_chick_blink2.png",
-            "/Assets/pet_angel_chick_blink3.png", "/Assets/pet_angel_chick_blink4.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_blink1.png", "/Assets/angel_chick/stage1/pet_angel_chick_blink2.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_blink3.png", "/Assets/angel_chick/stage1/pet_angel_chick_blink4.png",
         },
         SleepFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_sleep1.png", "/Assets/pet_angel_chick_sleep2.png",
-            "/Assets/pet_angel_chick_sleep3.png", "/Assets/pet_angel_chick_sleep4.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_sleep1.png", "/Assets/angel_chick/stage1/pet_angel_chick_sleep2.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_sleep3.png", "/Assets/angel_chick/stage1/pet_angel_chick_sleep4.png",
         },
         CelebrateFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_celebrate1.png", "/Assets/pet_angel_chick_celebrate2.png",
-            "/Assets/pet_angel_chick_celebrate3.png", "/Assets/pet_angel_chick_celebrate4.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_celebrate1.png", "/Assets/angel_chick/stage1/pet_angel_chick_celebrate2.png",
+            "/Assets/angel_chick/stage1/pet_angel_chick_celebrate3.png", "/Assets/angel_chick/stage1/pet_angel_chick_celebrate4.png",
         },
         FamilyId: AngelChickFamily, Stage: 1);
 
     private static readonly PetSkin AngelChickStage2 = new(
-        "angel_chick_stage2", "/Assets/pet_angel_chick_stage2_happy.png", "/Assets/pet_angel_chick_stage2_idle.png", "/Assets/pet_angel_chick_stage2_sleep.png",
+        "angel_chick_stage2", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_happy.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_idle.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_sleep.png",
         WalkFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage2_walk1.png", "/Assets/pet_angel_chick_stage2_walk2.png",
-            "/Assets/pet_angel_chick_stage2_walk3.png", "/Assets/pet_angel_chick_stage2_walk4.png",
-            "/Assets/pet_angel_chick_stage2_walk5.png", "/Assets/pet_angel_chick_stage2_walk6.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_walk1.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_walk2.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_walk3.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_walk4.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_walk5.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_walk6.png",
         },
         BlinkFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage2_blink1.png", "/Assets/pet_angel_chick_stage2_blink2.png",
-            "/Assets/pet_angel_chick_stage2_blink3.png", "/Assets/pet_angel_chick_stage2_blink4.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_blink1.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_blink2.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_blink3.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_blink4.png",
         },
         SleepFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage2_sleep1.png", "/Assets/pet_angel_chick_stage2_sleep2.png",
-            "/Assets/pet_angel_chick_stage2_sleep3.png", "/Assets/pet_angel_chick_stage2_sleep4.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_sleep1.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_sleep2.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_sleep3.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_sleep4.png",
         },
         CelebrateFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage2_celebrate1.png", "/Assets/pet_angel_chick_stage2_celebrate2.png",
-            "/Assets/pet_angel_chick_stage2_celebrate3.png", "/Assets/pet_angel_chick_stage2_celebrate4.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_celebrate1.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_celebrate2.png",
+            "/Assets/angel_chick/stage2/pet_angel_chick_stage2_celebrate3.png", "/Assets/angel_chick/stage2/pet_angel_chick_stage2_celebrate4.png",
         },
         FamilyId: AngelChickFamily, Stage: 2);
 
     private static readonly PetSkin AngelChickStage3 = new(
-        "angel_chick_stage3", "/Assets/pet_angel_chick_stage3_happy.png", "/Assets/pet_angel_chick_stage3_idle.png", "/Assets/pet_angel_chick_stage3_sleep.png",
+        "angel_chick_stage3", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_happy.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_idle.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_sleep.png",
         WalkFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage3_walk1.png", "/Assets/pet_angel_chick_stage3_walk2.png",
-            "/Assets/pet_angel_chick_stage3_walk3.png", "/Assets/pet_angel_chick_stage3_walk4.png",
-            "/Assets/pet_angel_chick_stage3_walk5.png", "/Assets/pet_angel_chick_stage3_walk6.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_walk1.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_walk2.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_walk3.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_walk4.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_walk5.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_walk6.png",
         },
         BlinkFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage3_blink1.png", "/Assets/pet_angel_chick_stage3_blink2.png",
-            "/Assets/pet_angel_chick_stage3_blink3.png", "/Assets/pet_angel_chick_stage3_blink4.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_blink1.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_blink2.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_blink3.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_blink4.png",
         },
         SleepFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage3_sleep1.png", "/Assets/pet_angel_chick_stage3_sleep2.png",
-            "/Assets/pet_angel_chick_stage3_sleep3.png", "/Assets/pet_angel_chick_stage3_sleep4.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_sleep1.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_sleep2.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_sleep3.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_sleep4.png",
         },
         CelebrateFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage3_celebrate1.png", "/Assets/pet_angel_chick_stage3_celebrate2.png",
-            "/Assets/pet_angel_chick_stage3_celebrate3.png", "/Assets/pet_angel_chick_stage3_celebrate4.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_celebrate1.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_celebrate2.png",
+            "/Assets/angel_chick/stage3/pet_angel_chick_stage3_celebrate3.png", "/Assets/angel_chick/stage3/pet_angel_chick_stage3_celebrate4.png",
         },
         FamilyId: AngelChickFamily, Stage: 3);
 
     private static readonly PetSkin AngelChickStage4 = new(
-        "angel_chick_stage4", "/Assets/pet_angel_chick_stage4_happy.png", "/Assets/pet_angel_chick_stage4_idle.png", "/Assets/pet_angel_chick_stage4_sleep.png",
+        "angel_chick_stage4", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_happy.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_idle.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_sleep.png",
         WalkFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage4_walk1.png", "/Assets/pet_angel_chick_stage4_walk2.png",
-            "/Assets/pet_angel_chick_stage4_walk3.png", "/Assets/pet_angel_chick_stage4_walk4.png",
-            "/Assets/pet_angel_chick_stage4_walk5.png", "/Assets/pet_angel_chick_stage4_walk6.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_walk1.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_walk2.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_walk3.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_walk4.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_walk5.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_walk6.png",
         },
         BlinkFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage4_blink1.png", "/Assets/pet_angel_chick_stage4_blink2.png",
-            "/Assets/pet_angel_chick_stage4_blink3.png", "/Assets/pet_angel_chick_stage4_blink4.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_blink1.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_blink2.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_blink3.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_blink4.png",
         },
         SleepFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage4_sleep1.png", "/Assets/pet_angel_chick_stage4_sleep2.png",
-            "/Assets/pet_angel_chick_stage4_sleep3.png", "/Assets/pet_angel_chick_stage4_sleep4.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_sleep1.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_sleep2.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_sleep3.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_sleep4.png",
         },
         CelebrateFramePaths: new[]
         {
-            "/Assets/pet_angel_chick_stage4_celebrate1.png", "/Assets/pet_angel_chick_stage4_celebrate2.png",
-            "/Assets/pet_angel_chick_stage4_celebrate3.png", "/Assets/pet_angel_chick_stage4_celebrate4.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_celebrate1.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_celebrate2.png",
+            "/Assets/angel_chick/stage4/pet_angel_chick_stage4_celebrate3.png", "/Assets/angel_chick/stage4/pet_angel_chick_stage4_celebrate4.png",
         },
         FamilyId: AngelChickFamily, Stage: 4);
 
@@ -122,29 +122,29 @@ public static class PetSkins
     /// duplicate file, SleepingImagePath so <c>HasDedicatedPoses</c> stays true and the
     /// walk/blink frame timers apply).</summary>
     private static readonly PetSkin Softdebut = new(
-        "softdebut", "/Assets/pet_softdebut_idle.png", "/Assets/pet_softdebut_idle.png", "/Assets/pet_softdebut_sleep.png",
+        "softdebut", "/Assets/softdebut/normal/pet_softdebut_idle.png", "/Assets/softdebut/normal/pet_softdebut_idle.png", "/Assets/softdebut/normal/pet_softdebut_sleep.png",
         WalkFramePaths: new[]
         {
-            "/Assets/pet_softdebut_walk1.png", "/Assets/pet_softdebut_walk2.png",
-            "/Assets/pet_softdebut_walk3.png", "/Assets/pet_softdebut_walk4.png",
-            "/Assets/pet_softdebut_walk5.png", "/Assets/pet_softdebut_walk6.png",
+            "/Assets/softdebut/normal/pet_softdebut_walk1.png", "/Assets/softdebut/normal/pet_softdebut_walk2.png",
+            "/Assets/softdebut/normal/pet_softdebut_walk3.png", "/Assets/softdebut/normal/pet_softdebut_walk4.png",
+            "/Assets/softdebut/normal/pet_softdebut_walk5.png", "/Assets/softdebut/normal/pet_softdebut_walk6.png",
         },
         BlinkFramePaths: new[]
         {
-            "/Assets/pet_softdebut_blink1.png", "/Assets/pet_softdebut_blink2.png",
-            "/Assets/pet_softdebut_blink3.png", "/Assets/pet_softdebut_blink4.png",
+            "/Assets/softdebut/normal/pet_softdebut_blink1.png", "/Assets/softdebut/normal/pet_softdebut_blink2.png",
+            "/Assets/softdebut/normal/pet_softdebut_blink3.png", "/Assets/softdebut/normal/pet_softdebut_blink4.png",
         },
         CelebrateFramePaths: new[]
         {
-            "/Assets/pet_softdebut_celebrate1.png", "/Assets/pet_softdebut_celebrate2.png",
-            "/Assets/pet_softdebut_celebrate3.png", "/Assets/pet_softdebut_celebrate4.png",
+            "/Assets/softdebut/normal/pet_softdebut_celebrate1.png", "/Assets/softdebut/normal/pet_softdebut_celebrate2.png",
+            "/Assets/softdebut/normal/pet_softdebut_celebrate3.png", "/Assets/softdebut/normal/pet_softdebut_celebrate4.png",
         },
-        HeroIdleImagePath: "/Assets/pet_softdebut_hero_idle.png",
+        HeroIdleImagePath: "/Assets/softdebut/hero/pet_softdebut_hero_idle.png",
         HeroWalkFramePaths: new[]
         {
-            "/Assets/pet_softdebut_hero_walk1.png", "/Assets/pet_softdebut_hero_walk2.png",
-            "/Assets/pet_softdebut_hero_walk3.png", "/Assets/pet_softdebut_hero_walk4.png",
-            "/Assets/pet_softdebut_hero_walk5.png", "/Assets/pet_softdebut_hero_walk6.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_walk1.png", "/Assets/softdebut/hero/pet_softdebut_hero_walk2.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_walk3.png", "/Assets/softdebut/hero/pet_softdebut_hero_walk4.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_walk5.png", "/Assets/softdebut/hero/pet_softdebut_hero_walk6.png",
         },
         // Regenerated 2026-07-14: the original 8-frame set had a baked-in art defect
         // (crown mounting post didn't blend into the head shell — visible seam/gap) and
@@ -155,18 +155,18 @@ public static class PetSkins
         // frame 4 flows back into frame 1.
         HeroPowerIdleFramePaths: new[]
         {
-            "/Assets/pet_softdebut_hero_power_idle_gen1.png", "/Assets/pet_softdebut_hero_power_idle_gen2.png",
-            "/Assets/pet_softdebut_hero_power_idle_gen3.png", "/Assets/pet_softdebut_hero_power_idle_gen4.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_power_idle_gen1.png", "/Assets/softdebut/hero/pet_softdebut_hero_power_idle_gen2.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_power_idle_gen3.png", "/Assets/softdebut/hero/pet_softdebut_hero_power_idle_gen4.png",
         },
         HeroTransformFramePaths: new[]
         {
-            "/Assets/pet_softdebut_hero_transform1.png", "/Assets/pet_softdebut_hero_transform2.png",
-            "/Assets/pet_softdebut_hero_transform3.png", "/Assets/pet_softdebut_hero_transform4.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_transform1.png", "/Assets/softdebut/hero/pet_softdebut_hero_transform2.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_transform3.png", "/Assets/softdebut/hero/pet_softdebut_hero_transform4.png",
         },
         HeroTransformBackFramePaths: new[]
         {
-            "/Assets/pet_softdebut_hero_transform_back1.png", "/Assets/pet_softdebut_hero_transform_back2.png",
-            "/Assets/pet_softdebut_hero_transform_back3.png", "/Assets/pet_softdebut_hero_transform_back4.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_transform_back1.png", "/Assets/softdebut/hero/pet_softdebut_hero_transform_back2.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_transform_back3.png", "/Assets/softdebut/hero/pet_softdebut_hero_transform_back4.png",
         });
 
     public static readonly PetSkin[] All =
