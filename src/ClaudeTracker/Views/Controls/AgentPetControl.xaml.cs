@@ -7,6 +7,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using ClaudeTracker.Models;
+using ClaudeTracker.Services.Interfaces;
 using ClaudeTracker.Utilities;
 using ClaudeTracker.ViewModels;
 
@@ -39,6 +40,8 @@ public partial class AgentPetControl : UserControl
     private const int CelebrateTicksPerFrame = 2; // ~220ms per frame
     private const int CelebrateLoops = 2;
     private const int HeroTransformTicksPerFrame = 2; // ~220ms per frame, matches celebrate's cadence
+    private const int SitTransformTicksPerFrame = 3; // ~330ms per frame — slower, gentle sit/stand motion
+    private const int SitLoopTicksPerFrame = 4; // ~440ms per frame, matches sleep's breathing pace
     private const double ClickMoveThresholdPx = 4;
     private BitmapImage[] _walkFrames = Array.Empty<BitmapImage>();
     private BitmapImage[] _blinkFrames = Array.Empty<BitmapImage>();
@@ -49,6 +52,10 @@ public partial class AgentPetControl : UserControl
     private BitmapImage[] _heroPowerIdleFrames = Array.Empty<BitmapImage>();
     private BitmapImage[] _heroTransformFrames = Array.Empty<BitmapImage>();
     private BitmapImage[] _heroTransformBackFrames = Array.Empty<BitmapImage>();
+    private BitmapImage[] _sitEnterFrames = Array.Empty<BitmapImage>();
+    private BitmapImage[] _sitLoopFrames = Array.Empty<BitmapImage>();
+    private BitmapImage[] _sitExitFrames = Array.Empty<BitmapImage>();
+    private BitmapImage[] _waveFrames = Array.Empty<BitmapImage>();
     private int _walkFrameIndex;
     private int _ticksUntilBlink;
     private int _blinkPos = -1; // -1 = not currently blinking
@@ -61,6 +68,13 @@ public partial class AgentPetControl : UserControl
     private int _heroTransformPos = -1; // -1 = not transforming
     private int _heroTransformTickCounter;
     private bool _heroTransformEntering;
+    private int _sitTransformPos = -1; // -1 = not playing the sit-down/stand-up transition
+    private int _sitTransformTickCounter;
+    private bool _sitEntering;
+    private int _sitLoopFrameIndex;
+    private int _sitLoopTickCounter;
+    private int _wavePos = -1; // -1 = not currently waving
+    private int _ticksUntilWave;
     private PetState _lastAppliedState = PetState.Idle;
     private Point _dragOffset;
     private Point _dragStartPos;
@@ -80,6 +94,7 @@ public partial class AgentPetControl : UserControl
                 ApplyState(_viewModel.State);
                 SetFacing(_viewModel.FacingRight);
                 UpdateSubagentVisuals(_viewModel.SubagentCount);
+                UpdateHeroHintVisuals(_viewModel.ShowHeroHint);
             }
         };
         Unloaded += (_, _) => _frameTimer.Stop();
@@ -136,8 +151,22 @@ public partial class AgentPetControl : UserControl
         {
             // a plain click, not a drag — toggle Hero mode instead of saving position
             _viewModel.IsHeroMode = !_viewModel.IsHeroMode;
+            if (_viewModel.IsHeroMode)
+                MarkHeroModeDiscovered();
         }
         e.Handled = true;
+    }
+
+    /// <summary>First time this skin family's hero mode is triggered, records it so the
+    /// discoverability hint (badge + tooltip) stops showing — for this pet immediately via
+    /// the property setter below, and for every other pet sharing the family via the
+    /// settings-changed broadcast in AgentPetsViewModel.RefreshHeroHints.</summary>
+    private void MarkHeroModeDiscovered()
+    {
+        var settings = App.Services.GetRequiredService<ISettingsService>();
+        if (settings.Settings.SeenHeroModeSkins.Contains(_skin.EffectiveFamilyId)) return;
+        settings.Settings.SeenHeroModeSkins.Add(_skin.EffectiveFamilyId);
+        settings.Save();
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -167,6 +196,10 @@ public partial class AgentPetControl : UserControl
         _heroPowerIdleFrames = LoadFrames(_skin.HeroPowerIdleFramePaths);
         _heroTransformFrames = LoadFrames(_skin.HeroTransformFramePaths);
         _heroTransformBackFrames = LoadFrames(_skin.HeroTransformBackFramePaths);
+        _sitEnterFrames = LoadFrames(_skin.SitEnterFramePaths);
+        _sitLoopFrames = LoadFrames(_skin.SitFramePaths);
+        _sitExitFrames = LoadFrames(_skin.SitExitFramePaths);
+        _waveFrames = LoadFrames(_skin.WaveFramePaths);
 
         BabyImage.Source = LoadImage(_skin.IdleImagePath);
 
@@ -239,6 +272,35 @@ public partial class AgentPetControl : UserControl
         _frameTimer.Start();
     }
 
+    /// <summary>Plays the one-shot sit-down (stand→crouch→sit) or stand-up (crouch→stand)
+    /// transition, then re-applies the current state — mirrors StartHeroTransform. Falls
+    /// straight through to ApplyDedicatedPoseState if the skin has no transition art, so a
+    /// skin can ship Sitting art incrementally (loop frames only, no dedicated transition).</summary>
+    private void StartSitTransition(bool entering)
+    {
+        if (_viewModel == null) return;
+        var frames = entering ? _sitEnterFrames : _sitExitFrames;
+        if (frames.Length == 0)
+        {
+            ApplyDedicatedPoseState(_viewModel.State);
+            return;
+        }
+
+        EyesClosed.Visibility = Visibility.Collapsed;
+        _zzz.Stop();
+        ZzzText.Opacity = 0;
+        PetImage.BeginAnimation(UIElement.OpacityProperty, null);
+        PetImage.Opacity = 1.0;
+        _bob.Stop();
+        _babyBob.Stop();
+        _breathe.Stop();
+        _sitEntering = entering;
+        _sitTransformPos = 0;
+        _sitTransformTickCounter = 0;
+        PetImage.Source = frames[0];
+        _frameTimer.Start();
+    }
+
     private void FrameTick()
     {
         if (_viewModel == null) return;
@@ -257,6 +319,24 @@ public partial class AgentPetControl : UserControl
                     return;
                 }
                 PetImage.Source = frames[_heroTransformPos];
+            }
+            return;
+        }
+
+        if (_sitTransformPos >= 0)
+        {
+            var sitFrames = _sitEntering ? _sitEnterFrames : _sitExitFrames;
+            if (++_sitTransformTickCounter >= SitTransformTicksPerFrame)
+            {
+                _sitTransformTickCounter = 0;
+                _sitTransformPos++;
+                if (_sitTransformPos >= sitFrames.Length)
+                {
+                    _sitTransformPos = -1;
+                    ApplyDedicatedPoseState(_viewModel.State);
+                    return;
+                }
+                PetImage.Source = sitFrames[_sitTransformPos];
             }
             return;
         }
@@ -300,6 +380,17 @@ public partial class AgentPetControl : UserControl
             return;
         }
 
+        if (_viewModel.State == PetState.Sitting && _sitLoopFrames.Length > 0)
+        {
+            if (++_sitLoopTickCounter >= SitLoopTicksPerFrame)
+            {
+                _sitLoopTickCounter = 0;
+                _sitLoopFrameIndex = (_sitLoopFrameIndex + 1) % _sitLoopFrames.Length;
+                PetImage.Source = _sitLoopFrames[_sitLoopFrameIndex];
+            }
+            return;
+        }
+
         if (_viewModel.State == PetState.Idle)
         {
             bool heroPowerIdle = _viewModel.IsHeroMode && _heroPowerIdleFrames.Length > 0;
@@ -314,37 +405,64 @@ public partial class AgentPetControl : UserControl
                 return;
             }
 
-            var blinkFrames = _viewModel.IsHeroMode && _heroBlinkFrames.Length > 0 ? _heroBlinkFrames : _blinkFrames;
-            if (blinkFrames.Length > 0)
+            // one-shot wave takes priority over blink — they never play together
+            if (_wavePos >= 0)
             {
-                if (_blinkPos >= 0)
+                _wavePos++;
+                if (_wavePos >= _waveFrames.Length)
                 {
-                    _blinkPos++;
-                    if (_blinkPos >= blinkFrames.Length)
-                    {
-                        _blinkPos = -1;
-                        var idlePath = _viewModel.IsHeroMode && _skin.HeroIdleImagePath != null
-                            ? _skin.HeroIdleImagePath
-                            : _skin.IdleImagePath;
-                        PetImage.Source = LoadImage(idlePath);
-                        ScheduleNextBlink();
-                    }
-                    else
-                    {
-                        PetImage.Source = blinkFrames[_blinkPos];
-                    }
+                    _wavePos = -1;
+                    var idlePath = _viewModel.IsHeroMode && _skin.HeroIdleImagePath != null
+                        ? _skin.HeroIdleImagePath
+                        : _skin.IdleImagePath;
+                    PetImage.Source = LoadImage(idlePath);
+                    ScheduleNextBlink();
                 }
-                else if (--_ticksUntilBlink <= 0)
+                else
                 {
-                    _blinkPos = 0;
-                    PetImage.Source = blinkFrames[0];
+                    PetImage.Source = _waveFrames[_wavePos];
                 }
+                return;
+            }
+
+            var blinkFrames = _viewModel.IsHeroMode && _heroBlinkFrames.Length > 0 ? _heroBlinkFrames : _blinkFrames;
+            if (_blinkPos >= 0)
+            {
+                _blinkPos++;
+                if (_blinkPos >= blinkFrames.Length)
+                {
+                    _blinkPos = -1;
+                    var idlePath = _viewModel.IsHeroMode && _skin.HeroIdleImagePath != null
+                        ? _skin.HeroIdleImagePath
+                        : _skin.IdleImagePath;
+                    PetImage.Source = LoadImage(idlePath);
+                    ScheduleNextBlink();
+                }
+                else
+                {
+                    PetImage.Source = blinkFrames[_blinkPos];
+                }
+            }
+            else if (_waveFrames.Length > 0 && --_ticksUntilWave <= 0)
+            {
+                _wavePos = 0;
+                PetImage.Source = _waveFrames[0];
+            }
+            else if (blinkFrames.Length > 0 && --_ticksUntilBlink <= 0)
+            {
+                _blinkPos = 0;
+                PetImage.Source = blinkFrames[0];
             }
         }
     }
 
     private void ScheduleNextBlink() =>
         _ticksUntilBlink = _random.Next(3000 / FrameTickMs, 8000 / FrameTickMs);
+
+    /// <summary>Occasional idle wave — much rarer than a blink, so it reads as a deliberate
+    /// greeting rather than a tic.</summary>
+    private void ScheduleNextWave() =>
+        _ticksUntilWave = _random.Next(30_000 / FrameTickMs, 90_000 / FrameTickMs);
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -366,6 +484,9 @@ public partial class AgentPetControl : UserControl
             case nameof(AgentPetViewModel.IsHeroMode):
                 if (_celebratePos < 0)
                     StartHeroTransform(_viewModel.IsHeroMode);
+                break;
+            case nameof(AgentPetViewModel.ShowHeroHint):
+                UpdateHeroHintVisuals(_viewModel.ShowHeroHint);
                 break;
         }
     }
@@ -444,10 +565,10 @@ public partial class AgentPetControl : UserControl
 
         if (_skin.HasDedicatedPoses)
         {
-            // a hero transform is mid-flight — let it finish; FrameTick calls
-            // ApplyDedicatedPoseState(_viewModel.State) itself on completion, which will
-            // pick up whatever state is current by then
-            if (_heroTransformPos >= 0) return;
+            // a hero transform or sit transition is mid-flight — let it finish; FrameTick
+            // calls ApplyDedicatedPoseState(_viewModel.State) itself on completion, which
+            // will pick up whatever state is current by then
+            if (_heroTransformPos >= 0 || _sitTransformPos >= 0) return;
 
             // finished working → one-shot celebrate jump before settling into idle
             if (previous == PetState.Working && state == PetState.Idle && _celebrateFrames.Length > 0)
@@ -456,6 +577,19 @@ public partial class AgentPetControl : UserControl
                 return;
             }
             _celebratePos = -1;
+
+            // idle too long → sit down; resumed activity or fell fully asleep → stand back up
+            if (previous != PetState.Sitting && state == PetState.Sitting && _sitEnterFrames.Length > 0)
+            {
+                StartSitTransition(entering: true);
+                return;
+            }
+            if (previous == PetState.Sitting && state != PetState.Sitting && _sitExitFrames.Length > 0)
+            {
+                StartSitTransition(entering: false);
+                return;
+            }
+
             ApplyDedicatedPoseState(state);
             return;
         }
@@ -516,6 +650,7 @@ public partial class AgentPetControl : UserControl
         PetImage.BeginAnimation(UIElement.OpacityProperty, null);
         PetImage.Opacity = 1.0;
         _blinkPos = -1;
+        _wavePos = -1;
 
         bool isHeroMode = _viewModel?.IsHeroMode ?? false;
 
@@ -566,13 +701,34 @@ public partial class AgentPetControl : UserControl
                 _babyBob.Begin();
                 _babyBob.SetSpeedRatio(0.5);
                 var idleBlinkFrames = isHeroMode && _heroBlinkFrames.Length > 0 ? _heroBlinkFrames : _blinkFrames;
-                if (idleBlinkFrames.Length > 0)
+                if (idleBlinkFrames.Length > 0) ScheduleNextBlink();
+                if (_waveFrames.Length > 0) ScheduleNextWave();
+                if (idleBlinkFrames.Length > 0 || _waveFrames.Length > 0)
                 {
-                    ScheduleNextBlink();
                     _frameTimer.Start();
                 }
                 else
                 {
+                    _frameTimer.Stop();
+                }
+                break;
+
+            case PetState.Sitting:
+                _bob.Stop();
+                _babyBob.Stop();
+                if (_sitLoopFrames.Length > 0)
+                {
+                    // sit frames carry the breathing — no synthetic scale on top
+                    _sitLoopFrameIndex = 0;
+                    _sitLoopTickCounter = 0;
+                    PetImage.Source = _sitLoopFrames[0];
+                    _frameTimer.Start();
+                }
+                else
+                {
+                    // no dedicated sit art for this skin yet — hold idle art, no motion
+                    var sitFallbackIdlePath = isHeroMode && _skin.HeroIdleImagePath != null ? _skin.HeroIdleImagePath : _skin.IdleImagePath;
+                    PetImage.Source = LoadImage(sitFallbackIdlePath);
                     _frameTimer.Stop();
                 }
                 break;
@@ -612,6 +768,9 @@ public partial class AgentPetControl : UserControl
         BabyBlob.Visibility = visible;
     }
 
+    private void UpdateHeroHintVisuals(bool show) =>
+        HeroHintBadge.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+
     public void PauseAll()
     {
         _frameTimer.Stop();
@@ -625,7 +784,8 @@ public partial class AgentPetControl : UserControl
         bool hasFramesForState = _celebratePos >= 0 || _viewModel?.State switch
         {
             PetState.Working => _walkFrames.Length > 0,
-            PetState.Idle => _blinkFrames.Length > 0,
+            PetState.Idle => _blinkFrames.Length > 0 || _waveFrames.Length > 0,
+            PetState.Sitting => _sitLoopFrames.Length > 0,
             PetState.Sleeping => _sleepFrames.Length > 0,
             _ => false
         };

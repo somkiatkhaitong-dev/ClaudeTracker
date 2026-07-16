@@ -8,6 +8,7 @@ public enum PetState
 {
     Working,
     Idle,
+    Sitting,
     Sleeping
 }
 
@@ -31,6 +32,12 @@ public partial class AgentPetViewModel : ObservableObject
     /// hero pet can still be Working/Idle/Sleeping, just rendered with hero art instead of
     /// normal art. Never persisted; always resets to false on relaunch.</summary>
     [ObservableProperty] private bool _isHeroMode;
+
+    /// <summary>Externally driven by <c>AgentPetsViewModel.RefreshHeroHints</c> — true while
+    /// this pet's skin has hero mode but the user hasn't discovered it yet (tracked in
+    /// <see cref="Models.AppSettings.SeenHeroModeSkins"/>). Drives a small discoverability
+    /// badge + tooltip hint; not itself persisted.</summary>
+    [ObservableProperty] private bool _showHeroHint;
 
     /// <summary>True while the user is actively dragging this pet — <c>WalkTick</c> skips
     /// it so the 33ms walk timer doesn't fight the live drag.</summary>
@@ -58,18 +65,28 @@ public partial class AgentPetViewModel : ObservableObject
         SubagentCount = session.ActiveSubagents.Count;
         LastActivityUtc = session.LastActivityTime;
         State = ComputeState(LastActivityUtc);
-        TooltipText = string.IsNullOrEmpty(CurrentActivity)
-            ? ProjectName
-            : $"{ProjectName} — {CurrentActivity}";
+        RefreshTooltip();
     }
 
     public void RefreshState() => State = ComputeState(LastActivityUtc);
+
+    private void RefreshTooltip()
+    {
+        var baseText = string.IsNullOrEmpty(CurrentActivity)
+            ? ProjectName
+            : $"{ProjectName} — {CurrentActivity}";
+        TooltipText = ShowHeroHint ? $"{baseText} ✨ click me!" : baseText;
+    }
+
+    partial void OnShowHeroHintChanged(bool value) => RefreshTooltip();
+    partial void OnIsHeroModeChanged(bool value) => RefreshTooltip();
 
     public static PetState ComputeState(DateTime lastActivityUtc)
     {
         var idle = DateTime.UtcNow - lastActivityUtc;
         if (idle.TotalSeconds < Constants.Pets.WorkingThresholdSeconds) return PetState.Working;
         if (idle.TotalMinutes > PetRuntimeSettings.SleepThresholdMinutes) return PetState.Sleeping;
+        if (idle.TotalMinutes > Constants.Pets.SittingThresholdMinutes) return PetState.Sitting;
         return PetState.Idle;
     }
 }

@@ -56,6 +56,12 @@
                            Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"
                            Margin="4,0"/>
             </Border>
+
+            <!-- Hero-mode discoverability hint: shown until the user has clicked this
+                 skin's hero-capable pet once (AppSettings.SeenHeroModeSkins), then gone
+                 forever. See ViewModels/AgentPetsViewModel.RefreshHeroHints. -->
+            <TextBlock x:Name="HeroHintBadge" Canvas.Left="2" Canvas.Top="0" Text="✨"
+                       FontSize="13" Visibility="Collapsed" IsHitTestVisible="False"/>
         </Canvas>
     </Grid>
 </UserControl>

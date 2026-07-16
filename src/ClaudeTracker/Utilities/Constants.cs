@@ -110,6 +110,7 @@ public static class Constants
     public static class Pets
     {
         public const double WorkingThresholdSeconds = 15;
+        public const double SittingThresholdMinutes = 1;
         public const double SleepThresholdMinutes = 2;
         public const int FrameIntervalMs = 33;
         public const double WorkingSpeed = 1.6;

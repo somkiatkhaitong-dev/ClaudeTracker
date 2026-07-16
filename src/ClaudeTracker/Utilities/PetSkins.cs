@@ -134,10 +134,48 @@ public static class PetSkins
             "/Assets/softdebut/normal/pet_softdebut_blink1.png", "/Assets/softdebut/normal/pet_softdebut_blink2.png",
             "/Assets/softdebut/normal/pet_softdebut_blink3.png", "/Assets/softdebut/normal/pet_softdebut_blink4.png",
         },
+        // 8-frame gentle-breathing loop (lying-down pose, cropped from a separate reference
+        // sheet than the standing poses above). Background removed with rembg model
+        // u2net — isnet-anime produced a globally washed-out alpha (~150/255 average
+        // instead of ~240/255) on this specific source image, visible as a faded pet.
+        SleepFramePaths: new[]
+        {
+            "/Assets/softdebut/normal/pet_softdebut_sleep1.png", "/Assets/softdebut/normal/pet_softdebut_sleep2.png",
+            "/Assets/softdebut/normal/pet_softdebut_sleep3.png", "/Assets/softdebut/normal/pet_softdebut_sleep4.png",
+            "/Assets/softdebut/normal/pet_softdebut_sleep5.png", "/Assets/softdebut/normal/pet_softdebut_sleep6.png",
+            "/Assets/softdebut/normal/pet_softdebut_sleep7.png", "/Assets/softdebut/normal/pet_softdebut_sleep8.png",
+        },
         CelebrateFramePaths: new[]
         {
             "/Assets/softdebut/normal/pet_softdebut_celebrate1.png", "/Assets/softdebut/normal/pet_softdebut_celebrate2.png",
             "/Assets/softdebut/normal/pet_softdebut_celebrate3.png", "/Assets/softdebut/normal/pet_softdebut_celebrate4.png",
+        },
+        // Sit-down/stand-up transition (stand→crouch→sit, played once when idle crosses
+        // Constants.Pets.SittingThresholdMinutes) plus a 4-frame breathing loop held while
+        // seated. All three share one bottom-anchored canvas cropped from the same
+        // reference sheet so the head sinks down naturally with no jitter across the cut.
+        SitEnterFramePaths: new[]
+        {
+            "/Assets/softdebut/normal/pet_softdebut_sit_stand.png", "/Assets/softdebut/normal/pet_softdebut_sit_crouch.png",
+            "/Assets/softdebut/normal/pet_softdebut_sit1.png",
+        },
+        SitFramePaths: new[]
+        {
+            "/Assets/softdebut/normal/pet_softdebut_sit1.png", "/Assets/softdebut/normal/pet_softdebut_sit2.png",
+            "/Assets/softdebut/normal/pet_softdebut_sit3.png", "/Assets/softdebut/normal/pet_softdebut_sit4.png",
+        },
+        SitExitFramePaths: new[]
+        {
+            "/Assets/softdebut/normal/pet_softdebut_sit_crouch.png", "/Assets/softdebut/normal/pet_softdebut_sit_stand.png",
+        },
+        // Rare one-shot greeting during Idle (~every 30-90s) — alternates right arm then
+        // left arm, neutral pose at both ends so it cuts cleanly back to idle art.
+        WaveFramePaths: new[]
+        {
+            "/Assets/softdebut/normal/pet_softdebut_wave1.png", "/Assets/softdebut/normal/pet_softdebut_wave2.png",
+            "/Assets/softdebut/normal/pet_softdebut_wave3.png", "/Assets/softdebut/normal/pet_softdebut_wave4.png",
+            "/Assets/softdebut/normal/pet_softdebut_wave5.png", "/Assets/softdebut/normal/pet_softdebut_wave6.png",
+            "/Assets/softdebut/normal/pet_softdebut_wave7.png", "/Assets/softdebut/normal/pet_softdebut_wave8.png",
         },
         HeroIdleImagePath: "/Assets/softdebut/hero/pet_softdebut_hero_idle.png",
         HeroWalkFramePaths: new[]

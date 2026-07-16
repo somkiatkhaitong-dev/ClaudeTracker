@@ -56,6 +56,12 @@ public class AppSettings
     [JsonPropertyName("disabledPetSkins")]
     public List<string> DisabledPetSkins { get; set; } = new();
 
+    /// <summary>Hero-capable pet skin family ids (<see cref="PetSkin.EffectiveFamilyId"/>)
+    /// the user has already discovered hero mode for — the click-to-transform hint stops
+    /// showing once a family id is in this list. One-way ratchet, never cleared.</summary>
+    [JsonPropertyName("seenHeroModeSkins")]
+    public List<string> SeenHeroModeSkins { get; set; } = new();
+
     [JsonPropertyName("petSpeedMultiplier")]
     public double PetSpeedMultiplier { get; set; } = 1.0;
 

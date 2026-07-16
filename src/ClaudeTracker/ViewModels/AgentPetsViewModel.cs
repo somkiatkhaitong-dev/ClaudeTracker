@@ -35,7 +35,11 @@ public partial class AgentPetsViewModel : ObservableObject, IDisposable
         _profileService = profileService;
         _refreshCoordinator = refreshCoordinator;
         _sessionTracking.SessionsChanged += (_, _) => SyncPets();
-        _settingsService.SettingsChanged += (_, _) => RefreshRuntimeSettings();
+        _settingsService.SettingsChanged += (_, _) =>
+        {
+            RefreshRuntimeSettings();
+            RefreshHeroHints();
+        };
         _refreshCoordinator.RefreshCompleted += OnUsageUpdated;
         _profileService.ActiveProfileChanged += OnActiveProfileChanged;
         RefreshRuntimeSettings();
@@ -68,6 +72,20 @@ public partial class AgentPetsViewModel : ObservableObject, IDisposable
         var settings = _settingsService.Settings;
         PetRuntimeSettings.SpeedMultiplier = settings.PetSpeedMultiplier;
         PetRuntimeSettings.SleepThresholdMinutes = settings.PetSleepThresholdMinutes;
+    }
+
+    /// <summary>Shows the hero-mode discoverability hint on any pet whose skin has hero
+    /// mode and hasn't been discovered yet (<see cref="AppSettings.SeenHeroModeSkins"/>).
+    /// Re-run whenever settings change so triggering hero mode on one pet clears the hint
+    /// on every other pet sharing that skin family in the same tick.</summary>
+    private void RefreshHeroHints()
+    {
+        var seen = _settingsService.Settings.SeenHeroModeSkins;
+        foreach (var pet in Pets)
+        {
+            var skin = PetSkins.ResolveStage(pet.SkinId, pet.EvolutionStage);
+            pet.ShowHeroHint = skin.HasHeroMode && !pet.IsHeroMode && !seen.Contains(skin.EffectiveFamilyId);
+        }
     }
 
     private string ResolveSkinId(string cwd, PetSkin[] enabledFamilies)
@@ -137,6 +155,7 @@ public partial class AgentPetsViewModel : ObservableObject, IDisposable
         if (Pets.Count != previousCount)
             PetsCountChanged?.Invoke(this, EventArgs.Empty);
         RefreshEvolutionStages();
+        RefreshHeroHints();
     }
 
     /// <summary>Recompute pet states from cached activity times — Working→Idle→Sleeping

@@ -5,8 +5,12 @@ namespace ClaudeTracker.Models;
 /// multi-pose skins point each state at dedicated artwork and need no eye overlay.
 /// WalkFramePaths (played while Working), BlinkFramePaths (played periodically while
 /// Idle, ordered open→half→closed→open), SleepFramePaths (slow breathing loop while
-/// Sleeping) and CelebrateFramePaths (one-shot jump when work finishes) are optional
-/// frame animations.</summary>
+/// Sleeping), CelebrateFramePaths (one-shot jump when work finishes) and WaveFramePaths
+/// (rare one-shot greeting during Idle) are optional frame animations. SitEnterFramePaths /
+/// SitExitFramePaths are the one-shot stand↔sit transition played when entering/leaving
+/// the Sitting state (idle too long); SitFramePaths is the breathing loop held while seated.
+/// A skin may ship SitFramePaths alone with no transition art — the state still works, it
+/// just cuts straight to the seated pose.</summary>
 public record PetSkin(
     string Id,
     string WorkingImagePath,
@@ -20,6 +24,10 @@ public record PetSkin(
     string[]? BlinkFramePaths = null,
     string[]? SleepFramePaths = null,
     string[]? CelebrateFramePaths = null,
+    string[]? SitEnterFramePaths = null,
+    string[]? SitFramePaths = null,
+    string[]? SitExitFramePaths = null,
+    string[]? WaveFramePaths = null,
     string? FamilyId = null,
     int Stage = 1,
     string? HeroIdleImagePath = null,
