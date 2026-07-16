@@ -380,7 +380,7 @@ public partial class AgentPetControl : UserControl
             return;
         }
 
-        if (_viewModel.State == PetState.Sitting && _sitLoopFrames.Length > 0)
+        if (_viewModel.State == PetState.Sitting && _sitLoopFrames.Length > 0 && !_viewModel.IsHeroMode)
         {
             if (++_sitLoopTickCounter >= SitLoopTicksPerFrame)
             {
@@ -578,13 +578,16 @@ public partial class AgentPetControl : UserControl
             }
             _celebratePos = -1;
 
-            // idle too long → sit down; resumed activity or fell fully asleep → stand back up
-            if (previous != PetState.Sitting && state == PetState.Sitting && _sitEnterFrames.Length > 0)
+            // idle too long → sit down; resumed activity or fell fully asleep → stand back up.
+            // Skipped in hero mode — the sit art has no cape/crown, so hero pets fall through
+            // to ApplyDedicatedPoseState's hero-idle fallback instead of a mismatched sit pose.
+            bool isHeroModeForSit = _viewModel?.IsHeroMode ?? false;
+            if (!isHeroModeForSit && previous != PetState.Sitting && state == PetState.Sitting && _sitEnterFrames.Length > 0)
             {
                 StartSitTransition(entering: true);
                 return;
             }
-            if (previous == PetState.Sitting && state != PetState.Sitting && _sitExitFrames.Length > 0)
+            if (!isHeroModeForSit && previous == PetState.Sitting && state != PetState.Sitting && _sitExitFrames.Length > 0)
             {
                 StartSitTransition(entering: false);
                 return;
@@ -716,7 +719,7 @@ public partial class AgentPetControl : UserControl
             case PetState.Sitting:
                 _bob.Stop();
                 _babyBob.Stop();
-                if (_sitLoopFrames.Length > 0)
+                if (_sitLoopFrames.Length > 0 && !isHeroMode)
                 {
                     // sit frames carry the breathing — no synthetic scale on top
                     _sitLoopFrameIndex = 0;
@@ -726,7 +729,8 @@ public partial class AgentPetControl : UserControl
                 }
                 else
                 {
-                    // no dedicated sit art for this skin yet — hold idle art, no motion
+                    // no dedicated sit art for this skin yet, or hero mode has none (sit art
+                    // has no cape/crown) — hold idle art, no motion
                     var sitFallbackIdlePath = isHeroMode && _skin.HeroIdleImagePath != null ? _skin.HeroIdleImagePath : _skin.IdleImagePath;
                     PetImage.Source = LoadImage(sitFallbackIdlePath);
                     _frameTimer.Stop();
@@ -785,7 +789,7 @@ public partial class AgentPetControl : UserControl
         {
             PetState.Working => _walkFrames.Length > 0,
             PetState.Idle => _blinkFrames.Length > 0 || _waveFrames.Length > 0,
-            PetState.Sitting => _sitLoopFrames.Length > 0,
+            PetState.Sitting => _sitLoopFrames.Length > 0 && !(_viewModel?.IsHeroMode ?? false),
             PetState.Sleeping => _sleepFrames.Length > 0,
             _ => false
         };
