@@ -550,13 +550,14 @@ public class ClaudeApiService : IClaudeApiService
 
         var body = await response.Content.ReadAsStringAsync();
         var preview = body.Length > 200 ? body[..200] : body;
+        LoggingService.Instance.Log($"API error on {endpoint} ({(int)response.StatusCode}): {preview}");
 
         throw (int)response.StatusCode switch
         {
-            401 or 403 => new HttpRequestException($"Unauthorized for {endpoint}. Session key may have expired. {preview}"),
+            401 or 403 => new HttpRequestException($"Unauthorized for {endpoint}. Session key may have expired."),
             429 => new HttpRequestException($"Rate limited by Claude API on {endpoint}"),
-            >= 500 => new HttpRequestException($"Server error ({(int)response.StatusCode}) on {endpoint}: {preview}"),
-            _ => new HttpRequestException($"HTTP {(int)response.StatusCode} on {endpoint}: {preview}")
+            >= 500 => new HttpRequestException($"Server error ({(int)response.StatusCode}) on {endpoint}"),
+            _ => new HttpRequestException($"HTTP {(int)response.StatusCode} on {endpoint}")
         };
     }
 }

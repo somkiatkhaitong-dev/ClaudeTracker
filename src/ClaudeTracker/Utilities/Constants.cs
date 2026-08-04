@@ -165,6 +165,8 @@ public static class Constants
         public const int MaxMessageSize = 5 * 1024 * 1024; // 5 MB
         public const int ConnectionTimeoutMs = 3000;
         public const int ResponseTimeoutMs = 310_000; // Above Claude's 300s permission timeout
+        public const int EventReadTimeoutMs = 10_000; // Time to read the length-prefixed event after connect, before a listener slot is freed
+        public const int DisconnectPollIntervalMs = 100; // Named-pipe has no async "wait for disconnect" primitive on Windows — PeekNamedPipe must be polled
         public const int StaleSessionMinutes = 15;
         public const int DefaultMaxActivityEntries = 200;
         public const int DefaultMaxFeedEntries = 10;

@@ -12,6 +12,7 @@ internal static class Program
     // --- Constants ---
     private const int ConnectionTimeoutMs = 3000;
     private const int ResponseTimeoutMs = 310_000;
+    private const int MaxStdinBytes = 5 * 1024 * 1024; // 5 MB, matches HookIpcService.Constants.Hooks.MaxMessageSize
 
     // --- Win32 interop ---
     [DllImport("kernel32.dll")]
@@ -38,6 +39,14 @@ internal static class Program
 
     private static string ClaudeSettingsPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude", "settings.json");
+
+    /// <summary>Writes settings.json via temp file + rename so a crash mid-write can't corrupt the shared Claude Code config.</summary>
+    private static void WriteSettingsAtomic(string settingsPath, string json)
+    {
+        var tempPath = settingsPath + ".tmp";
+        File.WriteAllText(tempPath, json);
+        File.Move(tempPath, settingsPath, overwrite: true);
+    }
 
     // Pre-v2.1.37: core hook events (existed from early hooks support)
     private static readonly string[] CoreEvents =
@@ -102,6 +111,23 @@ internal static class Program
         }
     }
 
+    /// <summary>Reads stdin up to maxBytes; returns null (treated as "no input") if the payload is oversized rather than buffering it all first.</summary>
+    private static async Task<string?> ReadStdinBounded(int maxBytes)
+    {
+        var buffer = new char[8192];
+        var sb = new StringBuilder();
+        var totalBytes = 0;
+        int read;
+        while ((read = await Console.In.ReadAsync(buffer, 0, buffer.Length)) > 0)
+        {
+            totalBytes += Encoding.UTF8.GetByteCount(buffer, 0, read);
+            if (totalBytes > maxBytes)
+                return null;
+            sb.Append(buffer, 0, read);
+        }
+        return sb.ToString();
+    }
+
     // --- Hook Event Relay ---
     private static async Task<int> HandleHookEvent()
     {
@@ -111,7 +137,7 @@ internal static class Program
         // 1. Force UTF-8 for non-ASCII content (Vietnamese, CJK, etc.)
         Console.InputEncoding = Encoding.UTF8;
         Console.OutputEncoding = Encoding.UTF8;
-        var rawInput = await Console.In.ReadToEndAsync();
+        var rawInput = await ReadStdinBounded(MaxStdinBytes);
         if (string.IsNullOrWhiteSpace(rawInput))
             return 0;
 
@@ -368,7 +394,7 @@ internal static class Program
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
             var outputJson = settings.ToJsonString(writeOptions);
-            File.WriteAllText(settingsPath, outputJson);
+            WriteSettingsAtomic(settingsPath, outputJson);
 
             Console.WriteLine($"ClaudeTracker hooks installed successfully.");
             Console.WriteLine($"  Settings: {settingsPath}");
@@ -446,7 +472,7 @@ internal static class Program
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
             var outputJson = settings.ToJsonString(writeOptions);
-            File.WriteAllText(settingsPath, outputJson);
+            WriteSettingsAtomic(settingsPath, outputJson);
 
             Console.WriteLine($"ClaudeTracker hooks uninstalled successfully. Removed {removedCount} hook(s).");
             return 0;

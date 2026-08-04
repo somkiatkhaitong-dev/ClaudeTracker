@@ -1,4 +1,6 @@
 using System.IO;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using ClaudeTracker.Services.Interfaces;
 
 namespace ClaudeTracker.Services;
@@ -39,10 +41,30 @@ public class CredentialService : ICredentialService
             var dir = Path.GetDirectoryName(CredentialsFilePath)!;
             Directory.CreateDirectory(dir);
             File.WriteAllText(CredentialsFilePath, json);
+            RestrictToCurrentUser(CredentialsFilePath);
         }
         catch (Exception ex)
         {
             LoggingService.Instance.LogError("Failed to write CLI credentials file", ex);
+        }
+    }
+
+    /// <summary>Restricts the credentials file's ACL to the current Windows user only, defense-in-depth against other local accounts reading the plaintext token.</summary>
+    private static void RestrictToCurrentUser(string filePath)
+    {
+        try
+        {
+            var security = new FileSecurity();
+            security.SetAccessRuleProtection(true, false);
+            security.AddAccessRule(new FileSystemAccessRule(
+                WindowsIdentity.GetCurrent().User!,
+                FileSystemRights.FullControl,
+                AccessControlType.Allow));
+            new FileInfo(filePath).SetAccessControl(security);
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Instance.LogError("Failed to restrict ACL on CLI credentials file", ex);
         }
     }
 

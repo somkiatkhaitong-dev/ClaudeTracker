@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
@@ -48,6 +49,10 @@ public class HookIpcService : IHookIpcService
         IntPtr lpBytesRead,
         IntPtr lpTotalBytesAvail,
         IntPtr lpBytesLeftThisMessage);
+
+    // Win32 interop for identifying the connecting pipe client's process (defense-in-depth on top of the pipe's same-user ACL)
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetNamedPipeClientProcessId(SafePipeHandle pipe, out uint clientProcessId);
 
     public void Start()
     {
@@ -152,7 +157,14 @@ public class HookIpcService : IHookIpcService
 
                 await pipe.WaitForConnectionAsync(ct);
 
-                await HandleConnectionAsync(pipe, ct);
+                if (!IsTrustedClientProcess(pipe))
+                {
+                    LoggingService.Instance.LogWarning("[HookIpc] Rejected connection from a process that is not ClaudeTracker.HookBridge.exe");
+                }
+                else
+                {
+                    await HandleConnectionAsync(pipe, ct);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -207,6 +219,34 @@ public class HookIpcService : IHookIpcService
             inBufferSize: 0,
             outBufferSize: 0,
             pipeSecurity: ps);
+    }
+
+    /// <summary>
+    /// Defense-in-depth check: the pipe's ACL already restricts connections to the current Windows user,
+    /// but any process running as that user could otherwise connect and forge hook/permission events.
+    /// This verifies the connecting process is actually the HookBridge binary in the application
+    /// directory. Inspection failures are rejected deliberately: accepting an unverified client
+    /// would allow another same-user process to forge hook events.
+    /// </summary>
+    private static bool IsTrustedClientProcess(NamedPipeServerStream pipe)
+    {
+        try
+        {
+            if (!GetNamedPipeClientProcessId(pipe.SafePipeHandle, out var pid))
+                return false;
+
+            using var process = Process.GetProcessById((int)pid);
+            var exePath = process.MainModule?.FileName;
+            if (string.IsNullOrEmpty(exePath))
+                return false;
+
+            var expectedPath = Path.Combine(AppContext.BaseDirectory, "ClaudeTracker.HookBridge.exe");
+            return string.Equals(Path.GetFullPath(exePath), Path.GetFullPath(expectedPath), StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private async Task HandleConnectionAsync(NamedPipeServerStream pipe, CancellationToken ct)
@@ -308,32 +348,45 @@ public class HookIpcService : IHookIpcService
 
     private async Task<HookEvent?> ReadEventAsync(NamedPipeServerStream pipe, CancellationToken ct)
     {
-        // Read 4-byte length prefix (little-endian)
-        var lengthBytes = await ReadExactAsync(pipe, 4, ct);
-        if (lengthBytes == null)
-            return null;
-
-        var messageLength = BitConverter.ToInt32(lengthBytes, 0);
-        if (messageLength <= 0 || messageLength > Constants.Hooks.MaxMessageSize)
-        {
-            LoggingService.Instance.LogError($"[HookIpc] Invalid message length: {messageLength}");
-            return null;
-        }
-
-        // Read payload
-        var payloadBytes = await ReadExactAsync(pipe, messageLength, ct);
-        if (payloadBytes == null)
-            return null;
-
-        var json = Encoding.UTF8.GetString(payloadBytes);
+        // Bound how long a connected-but-silent client can occupy a listener slot before we free it.
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(Constants.Hooks.EventReadTimeoutMs);
+        var readCt = timeoutCts.Token;
 
         try
         {
-            return JsonSerializer.Deserialize<HookEvent>(json);
+            // Read 4-byte length prefix (little-endian)
+            var lengthBytes = await ReadExactAsync(pipe, 4, readCt);
+            if (lengthBytes == null)
+                return null;
+
+            var messageLength = BitConverter.ToInt32(lengthBytes, 0);
+            if (messageLength <= 0 || messageLength > Constants.Hooks.MaxMessageSize)
+            {
+                LoggingService.Instance.LogError($"[HookIpc] Invalid message length: {messageLength}");
+                return null;
+            }
+
+            // Read payload
+            var payloadBytes = await ReadExactAsync(pipe, messageLength, readCt);
+            if (payloadBytes == null)
+                return null;
+
+            var json = Encoding.UTF8.GetString(payloadBytes);
+
+            try
+            {
+                return JsonSerializer.Deserialize<HookEvent>(json);
+            }
+            catch (JsonException ex)
+            {
+                LoggingService.Instance.LogError("[HookIpc] Failed to deserialize event", ex);
+                return null;
+            }
         }
-        catch (JsonException ex)
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
-            LoggingService.Instance.LogError("[HookIpc] Failed to deserialize event", ex);
+            LoggingService.Instance.LogWarning("[HookIpc] Timed out waiting for event from connected client");
             return null;
         }
     }
@@ -390,7 +443,7 @@ public class HookIpcService : IHookIpcService
         {
             while (!ct.IsCancellationRequested && !disconnectTcs.Task.IsCompleted)
             {
-                await Task.Delay(100, ct);
+                await Task.Delay(Constants.Hooks.DisconnectPollIntervalMs, ct);
 
                 if (!pipe.IsConnected)
                 {

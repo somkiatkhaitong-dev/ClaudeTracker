@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using ClaudeTracker.Utilities;
 
 namespace ClaudeTracker.Models;
 
@@ -12,14 +13,18 @@ public class Profile
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
-    // Credentials (stored directly in profile)
+    // Credentials (stored directly in profile) — encrypted at rest with DPAPI (current-user scope);
+    // see DpapiStringConverter. Safe here because settings.json is exclusively ClaudeTracker's own
+    // file, unlike ~/.claude/.credentials.json which the Claude Code CLI also reads/writes directly.
     [JsonPropertyName("claudeSessionKey")]
+    [JsonConverter(typeof(DpapiStringConverter))]
     public string? ClaudeSessionKey { get; set; }
 
     [JsonPropertyName("organizationId")]
     public string? OrganizationId { get; set; }
 
     [JsonPropertyName("apiSessionKey")]
+    [JsonConverter(typeof(DpapiStringConverter))]
     public string? ApiSessionKey { get; set; }
 
     [JsonPropertyName("apiOrganizationId")]
@@ -32,6 +37,7 @@ public class Profile
     public string? ApiUserSearch { get; set; }
 
     [JsonPropertyName("cliCredentialsJSON")]
+    [JsonConverter(typeof(DpapiStringConverter))]
     public string? CliCredentialsJSON { get; set; }
 
     [JsonPropertyName("claudeSessionKeyExpiry")]

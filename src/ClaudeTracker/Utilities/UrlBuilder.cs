@@ -11,10 +11,14 @@ public class UrlBuilder
         _baseUrl = baseUrl.TrimEnd('/');
     }
 
-    /// <summary>Appends a path segment (trimming slashes).</summary>
+    /// <summary>Appends a (possibly multi-segment) path, URL-encoding each segment individually.</summary>
     public UrlBuilder AppendingPath(string path)
     {
-        _path += "/" + path.Trim('/');
+        var segments = path.Trim('/').Split('/');
+        foreach (var segment in segments)
+        {
+            _path += "/" + Uri.EscapeDataString(segment);
+        }
         return this;
     }
 
