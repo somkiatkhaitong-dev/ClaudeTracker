@@ -298,11 +298,29 @@ public class UsageRefreshCoordinator : IUsageRefreshCoordinator, IDisposable
 
     private async void OnPowerModeChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs e)
     {
-        if (e.Mode == Microsoft.Win32.PowerModes.Resume)
+        if (e.Mode != Microsoft.Win32.PowerModes.Resume) return;
+
+        try
         {
             LoggingService.Instance.Log("System resumed from sleep");
             await Task.Delay(2000); // Brief delay after wake
-            await RefreshAsync();
+
+            // SystemEvents.PowerModeChanged fires on its own internal thread, not the WPF
+            // dispatcher thread — marshal onto the UI thread before touching _isRefreshing
+            // and the other refresh state that the main timer tick also mutates.
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.CheckAccess())
+            {
+                await RefreshAsync();
+            }
+            else
+            {
+                await dispatcher.InvokeAsync(() => RefreshAsync()).Task.Unwrap();
+            }
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Instance.LogError("Failed to refresh after system resume", ex);
         }
     }
 

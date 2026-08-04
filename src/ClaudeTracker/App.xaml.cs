@@ -319,7 +319,7 @@ public partial class App : Application
         });
 
         // Check Claude Code version for update notification
-        _ = Task.Run(() => CheckClaudeCodeVersion(settingsService));
+        _ = Task.Run(() => CheckClaudeCodeVersionAsync(settingsService));
 
         // Listen for system theme changes
         SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
@@ -465,7 +465,7 @@ public partial class App : Application
         ThemeColors.Apply(isDark);
     }
 
-    private void CheckClaudeCodeVersion(ISettingsService settingsService)
+    private async Task CheckClaudeCodeVersionAsync(ISettingsService settingsService)
     {
         try
         {
@@ -478,7 +478,7 @@ public partial class App : Application
                 CreateNoWindow = true
             });
             if (process == null) return;
-            var output = process.StandardOutput.ReadToEnd().Trim();
+            var output = (await process.StandardOutput.ReadToEndAsync()).Trim();
             process.WaitForExit(3000);
 
             if (string.IsNullOrEmpty(output)) return;
@@ -486,7 +486,7 @@ public partial class App : Application
             LoggingService.Instance.Log($"Claude Code version detected: {output}");
 
             // Check if there's a newer version available via WebFetch to GitHub releases API
-            var latestVersion = GetLatestClaudeCodeVersion();
+            var latestVersion = await GetLatestClaudeCodeVersionAsync();
             if (latestVersion != null && latestVersion != output && IsNewerVersion(latestVersion, output))
             {
                 Dispatcher.Invoke(() =>
@@ -505,15 +505,15 @@ public partial class App : Application
         }
     }
 
-    private static string? GetLatestClaudeCodeVersion()
+    private static async Task<string?> GetLatestClaudeCodeVersionAsync()
     {
         try
         {
             using var client = new System.Net.Http.HttpClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd("ClaudeTracker");
-            var response = client.GetAsync("https://registry.npmjs.org/@anthropic-ai/claude-code/latest").Result;
+            var response = await client.GetAsync("https://registry.npmjs.org/@anthropic-ai/claude-code/latest");
             if (!response.IsSuccessStatusCode) return null;
-            var json = response.Content.ReadAsStringAsync().Result;
+            var json = await response.Content.ReadAsStringAsync();
             using var doc = System.Text.Json.JsonDocument.Parse(json);
             return doc.RootElement.GetProperty("version").GetString();
         }

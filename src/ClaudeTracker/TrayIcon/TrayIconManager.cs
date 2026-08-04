@@ -112,7 +112,7 @@ public class TrayIconManager : IDisposable
         LoggingService.Instance.Log("Tray icon initialized");
     }
 
-    public void UpdateIcon()
+    public async void UpdateIcon()
     {
         if (_trayIcon == null) return;
 
@@ -156,10 +156,13 @@ public class TrayIconManager : IDisposable
             var metricPrefix = iconConfig.ShowIconNames
                 ? (claudeUsage != null ? "S:" : "$:")
                 : null;
-            var icon = _renderer.RenderIcon(
+            // Skia rendering + PNG encode + native icon handle creation is comparatively
+            // expensive for UI-thread work that runs on every refresh tick — do it off-thread
+            // and only marshal the final icon swap back.
+            var icon = await Task.Run(() => _renderer.RenderIcon(
                 displayPercentage, status, style,
                 iconConfig.MonochromeMode, isDark, customColor,
-                iconConfig.ShowIconNames, metricPrefix);
+                iconConfig.ShowIconNames, metricPrefix));
 
             Application.Current.Dispatcher.Invoke(() =>
             {

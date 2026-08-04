@@ -22,20 +22,35 @@ public class NetworkMonitorService : INetworkMonitorService
     {
         LoggingService.Instance.Log($"Network availability changed: {e.IsAvailable}");
 
-        if (e.IsAvailable && !_wasAvailable)
+        // NetworkChange.NetworkAvailabilityChanged fires on a ThreadPool thread, which has no
+        // message loop — a DispatcherTimer created there would never reliably tick. Marshal
+        // onto the UI dispatcher before touching the timer or the shared _wasAvailable field.
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher == null)
+        {
+            _wasAvailable = e.IsAvailable;
+            return;
+        }
+
+        dispatcher.BeginInvoke(() => HandleAvailabilityChanged(e.IsAvailable));
+    }
+
+    private void HandleAvailabilityChanged(bool isAvailable)
+    {
+        if (isAvailable && !_wasAvailable)
         {
             _debounceTimer?.Stop();
             _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _debounceTimer.Tick += (_, _) =>
             {
-                _debounceTimer.Stop();
+                _debounceTimer?.Stop();
                 LoggingService.Instance.Log("Network restored — triggering refresh");
                 NetworkRestored?.Invoke(this, EventArgs.Empty);
             };
             _debounceTimer.Start();
         }
 
-        _wasAvailable = e.IsAvailable;
+        _wasAvailable = isAvailable;
     }
 
     public void Dispose()

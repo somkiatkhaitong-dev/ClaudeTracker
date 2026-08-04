@@ -13,6 +13,11 @@ public class TrayIconRenderer
 {
     private const int BaseSize = 16;
 
+    // Typefaces are immutable/thread-safe in SkiaSharp — share one instance instead of
+    // re-resolving the font family on every render tick.
+    private static readonly SKTypeface PercentageTypeface =
+        SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+
     public System.Drawing.Icon RenderIcon(
         double percentage,
         UsageStatusLevel status,
@@ -151,9 +156,8 @@ public class TrayIconRenderer
         string? prefix = null)
     {
         var text = prefix != null ? $"{prefix}{(int)Math.Round(percentage)}" : $"{(int)Math.Round(percentage)}";
-        using var typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
         var fontSize = prefix != null ? size * 0.50f : size * 0.65f;
-        using var font = new SKFont(typeface, fontSize);
+        using var font = new SKFont(PercentageTypeface, fontSize);
         using var paint = new SKPaint
         {
             Color = fillColor,
