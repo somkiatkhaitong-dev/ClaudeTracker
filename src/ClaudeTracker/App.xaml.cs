@@ -414,6 +414,7 @@ public partial class App : Application
         services.AddTransient<ProfilesViewModel>();
 
         services.AddTransient<HooksSettingsViewModel>();
+        services.AddTransient<WatchdogViewModel>();
         services.AddTransient<AboutViewModel>();
 
         // HttpClient
@@ -443,6 +444,7 @@ public partial class App : Application
         // Services
         services.AddSingleton<IActivityService, ActivityService>();
         services.AddSingleton<ISessionTrackingService, SessionTrackingService>();
+        services.AddSingleton<IWatchdogService, WatchdogService>();
         services.AddSingleton<MockSessionSeeder>();
     }
 

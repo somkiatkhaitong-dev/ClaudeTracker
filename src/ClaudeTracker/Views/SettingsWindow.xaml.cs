@@ -33,6 +33,7 @@ public partial class SettingsWindow : Window
         NavGeneral.Checked += (_, _) => ShowView<GeneralSettingsView>();
         NavProfiles.Checked += (_, _) => ShowView<ProfilesView>();
         NavHooks.Checked += (_, _) => ShowView<HooksSettingsView>();
+        NavWatchdog.Checked += (_, _) => ShowView<WatchdogView>();
         NavAbout.Checked += (_, _) => ShowView<AboutView>();
 
         // Show initial view
@@ -47,6 +48,7 @@ public partial class SettingsWindow : Window
         {
             "about" => NavAbout,
             "hooks" => NavHooks,
+            "watchdog" => NavWatchdog,
             "appearance" => NavAppearance,
             "general" => NavGeneral,
             "profiles" => NavProfiles,

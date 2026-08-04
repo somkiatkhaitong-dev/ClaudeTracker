@@ -82,6 +82,7 @@ public class SessionState
     public DateTime StartTime { get; set; } = DateTime.UtcNow;
     public string Cwd { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
+    public string PermissionMode { get; set; } = string.Empty;
     public int ToolCallCount { get; set; }
     public int SubagentCount { get; set; }
     public string CurrentActivity { get; set; } = string.Empty;

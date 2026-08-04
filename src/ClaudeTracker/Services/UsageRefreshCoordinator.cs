@@ -13,6 +13,7 @@ public class UsageRefreshCoordinator : IUsageRefreshCoordinator, IDisposable
     private readonly INotificationService _notificationService;
     private readonly IClaudeStatusService _statusService;
     private readonly ClaudeCodeSyncService _cliSyncService;
+    private readonly IWatchdogService _watchdogService;
     private DispatcherTimer? _timer;
     private DispatcherTimer? _resetTimer;
     private ClaudeStatus _cachedStatus = ClaudeStatus.Unknown;
@@ -38,13 +39,15 @@ public class UsageRefreshCoordinator : IUsageRefreshCoordinator, IDisposable
         IProfileService profileService,
         INotificationService notificationService,
         IClaudeStatusService statusService,
-        ClaudeCodeSyncService cliSyncService)
+        ClaudeCodeSyncService cliSyncService,
+        IWatchdogService watchdogService)
     {
         _apiService = apiService;
         _profileService = profileService;
         _notificationService = notificationService;
         _statusService = statusService;
         _cliSyncService = cliSyncService;
+        _watchdogService = watchdogService;
 
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
     }
@@ -156,9 +159,11 @@ public class UsageRefreshCoordinator : IUsageRefreshCoordinator, IDisposable
                     }
                 }
 
+                var previousUsage = profile.ClaudeUsage;
                 var usage = await _apiService.FetchUsageData();
                 _profileService.UpdateUsageData(profile.Id, claudeUsage: usage);
                 _notificationService.CheckAndNotify(profile, usage);
+                _watchdogService.OnUsageUpdated(profile, previousUsage, usage);
 
                 // Schedule auto-refresh when session resets (limit lifts)
                 ScheduleResetRefresh(usage.SessionResetTime);

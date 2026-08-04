@@ -30,6 +30,7 @@ public class SessionTrackingService : ISessionTrackingService
                 {
                     existing.CurrentActivity = "Resumed";
                     existing.LastActivityTime = DateTime.UtcNow;
+                    existing.PermissionMode = permissionMode;
                     return;
                 }
 
@@ -38,6 +39,7 @@ public class SessionTrackingService : ISessionTrackingService
                     SessionId = sessionId,
                     Cwd = projectDirectory,
                     Model = model ?? "",
+                    PermissionMode = permissionMode,
                     ConsoleWindowHandle = consoleWindowHandle
                 };
                 ActiveSessions.Add(session);

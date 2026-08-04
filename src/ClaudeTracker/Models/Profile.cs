@@ -74,6 +74,25 @@ public class Profile
     [JsonPropertyName("checkOverageLimitEnabled")]
     public bool CheckOverageLimitEnabled { get; set; } = true;
 
+    // Watchdog: auto-resume the interrupted CLI session once usage quota resets
+    [JsonPropertyName("resumeCliSessionOnReset")]
+    public bool ResumeCliSessionOnReset { get; set; }
+
+    [JsonPropertyName("watchdogMode")]
+    public WatchdogMode WatchdogMode { get; set; } = WatchdogMode.Interactive;
+
+    [JsonPropertyName("pendingResumes")]
+    public List<PendingResume> PendingResumes { get; set; } = new();
+
+    [JsonPropertyName("watchdogHistory")]
+    public List<WatchdogEvent> WatchdogHistory { get; set; } = new();
+
+    /// <summary>Project directories eligible for Watchdog auto-resume. Empty = unrestricted
+    /// (every captured session is eligible); non-empty = only these paths (and their
+    /// subdirectories) are.</summary>
+    [JsonPropertyName("watchdogAllowedProjects")]
+    public List<string> WatchdogAllowedProjects { get; set; } = new();
+
     // Notification Settings (Per-Profile)
     [JsonPropertyName("notificationSettings")]
     public NotificationSettings NotificationSettings { get; set; } = new();

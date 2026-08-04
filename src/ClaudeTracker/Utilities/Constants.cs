@@ -101,6 +101,44 @@ public static class Constants
         public const string HaikuModel = "claude-haiku-4-5-20251001";
     }
 
+    public static class Watchdog
+    {
+        /// <summary>Treat SessionPercentage crossing this threshold as "limit reached" — matches
+        /// the existing PopoverViewModel "Limit reached" check.</summary>
+        public const double LimitReachedThreshold = 99.5;
+
+        public const int MaxRetries = 3;
+        public static readonly TimeSpan[] RetryBackoff =
+        {
+            TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(120)
+        };
+
+        /// <summary>Don't offer to resume a session captured longer ago than this — the project
+        /// context is likely stale and the user has probably moved on.</summary>
+        public const double PendingResumeMaxAgeHours = 12.0;
+
+        public const string DefaultContinuationPrompt = "Please continue the task from where you left off.";
+
+        /// <summary>Permission modes verified to never block on an interactive prompt — the only
+        /// modes Unattended auto-resume is allowed to run under. Deliberately conservative:
+        /// "acceptEdits"/"dontAsk"/"auto" can still prompt for non-edit tools, so they are not
+        /// included until that's verified. Never widen this to make Unattended "just work" —
+        /// see the Watchdog plan's permission-mode safety gate.</summary>
+        public static readonly HashSet<string> NonPromptingPermissionModes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "bypassPermissions"
+        };
+
+        /// <summary>Phrases that, when found in resume output/messages, indicate the resume
+        /// itself hit a limit or error rather than genuinely finishing.</summary>
+        public static readonly string[] FailurePhrases =
+        {
+            "usage limit", "rate limit", "try again later", "quota exceeded",
+            "authentication failed", "not logged in", "invalid session",
+            "session not found", "permission denied", "unknown option"
+        };
+    }
+
     public static class StatusAPI
     {
         public const string StatusUrl = "https://status.claude.com/api/v2/status.json";
