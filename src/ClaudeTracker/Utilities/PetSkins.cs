@@ -205,6 +205,33 @@ public static class PetSkins
         {
             "/Assets/softdebut/hero/pet_softdebut_hero_transform_back1.png", "/Assets/softdebut/hero/pet_softdebut_hero_transform_back2.png",
             "/Assets/softdebut/hero/pet_softdebut_hero_transform_back3.png", "/Assets/softdebut/hero/pet_softdebut_hero_transform_back4.png",
+        },
+        // Hero-costume sit/sleep/wave — same idea as the normal-mode set above (a seated
+        // breathing loop, a lying-down breathing loop, and a rare idle wave) but with the
+        // cape and crown carried through every frame so Hero mode never has to fall back
+        // to a non-hero body for these poses. No HeroSitEnter/ExitFramePaths yet — only
+        // the seated pose itself was generated, no stand-crouch-sit transition art, so
+        // this cuts straight to the seated loop per PetSkin's "ship SitFramePaths alone"
+        // fallback.
+        // 8-frame procedural breathing loop (desktop-pet-animation skill's "breathe" preset
+        // over one clean seated-hero pose, 8 FPS) — plays faster than the 4-frame normal-mode
+        // sit loop, see HeroSitLoopTicksPerFrame in AgentPetControl.
+        HeroSitFramePaths: new[]
+        {
+            "/Assets/softdebut/hero/pet_softdebut_hero_sit1.png", "/Assets/softdebut/hero/pet_softdebut_hero_sit2.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_sit3.png", "/Assets/softdebut/hero/pet_softdebut_hero_sit4.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_sit5.png", "/Assets/softdebut/hero/pet_softdebut_hero_sit6.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_sit7.png", "/Assets/softdebut/hero/pet_softdebut_hero_sit8.png",
+        },
+        HeroSleepFramePaths: new[]
+        {
+            "/Assets/softdebut/hero/pet_softdebut_hero_sleep1.png", "/Assets/softdebut/hero/pet_softdebut_hero_sleep2.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_sleep3.png", "/Assets/softdebut/hero/pet_softdebut_hero_sleep4.png",
+        },
+        HeroWaveFramePaths: new[]
+        {
+            "/Assets/softdebut/hero/pet_softdebut_hero_wave1.png", "/Assets/softdebut/hero/pet_softdebut_hero_wave2.png",
+            "/Assets/softdebut/hero/pet_softdebut_hero_wave3.png", "/Assets/softdebut/hero/pet_softdebut_hero_wave4.png",
         });
 
     public static readonly PetSkin[] All =

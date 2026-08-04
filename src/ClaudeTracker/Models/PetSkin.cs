@@ -35,7 +35,12 @@ public record PetSkin(
     string[]? HeroWalkFramePaths = null,
     string[]? HeroPowerIdleFramePaths = null,
     string[]? HeroTransformFramePaths = null,
-    string[]? HeroTransformBackFramePaths = null)
+    string[]? HeroTransformBackFramePaths = null,
+    string[]? HeroSitEnterFramePaths = null,
+    string[]? HeroSitFramePaths = null,
+    string[]? HeroSitExitFramePaths = null,
+    string[]? HeroSleepFramePaths = null,
+    string[]? HeroWaveFramePaths = null)
 {
     public bool HasDedicatedPoses => SleepingImagePath != IdleImagePath;
 
@@ -43,7 +48,13 @@ public record PetSkin(
     /// Id so single-stage skins behave exactly as before evolution stages existed.</summary>
     public string EffectiveFamilyId => FamilyId ?? Id;
 
-    /// <summary>Whether this skin has a click-to-toggle alternate "Hero" form. Sleeping
-    /// always renders normal art regardless of Hero mode, so there is no HeroSleepFramePaths.</summary>
+    /// <summary>Whether this skin has a click-to-toggle alternate "Hero" form. The
+    /// Hero* frame sets above are each optional independently of the normal-mode
+    /// ones — a skin can have hero idle/walk art but no hero sit/sleep/wave art yet.
+    /// Unlike Blink/Walk/PowerIdle (which fall back to normal-mode art when hero art
+    /// is missing, since those are small overlays or already-matching poses), Sit/
+    /// Sleep/Wave never fall back: those poses show the whole body, and normal-mode
+    /// art has no cape/crown, so a missing Hero* array means AgentPetControl falls
+    /// through to the hero idle pose instead of a mismatched non-hero body.</summary>
     public bool HasHeroMode => HeroIdleImagePath != null;
 }
