@@ -38,6 +38,12 @@
                                Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Cursor="Arrow">
+                    <Button x:Name="MinimizeToTrayButton" VerticalAlignment="Center"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Width="22" Height="22" Padding="0"
+                            ToolTip="Minimize to tray">
+                        <materialDesign:PackIcon Kind="WindowMinimize" Width="13" Height="13" Foreground="{DynamicResource TextSubtle}" />
+                    </Button>
                     <Button x:Name="SwitchToPopoverButton" VerticalAlignment="Center"
                             Style="{StaticResource MaterialDesignIconButton}"
                             Width="22" Height="22" Padding="0"

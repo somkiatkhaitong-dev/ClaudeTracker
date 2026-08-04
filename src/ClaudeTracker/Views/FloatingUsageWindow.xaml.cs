@@ -26,6 +26,7 @@ public partial class FloatingUsageWindow : Window
         DataContext = _viewModel;
 
         CloseButton.Click += (_, _) => OnCloseRequested();
+        MinimizeToTrayButton.Click += (_, _) => OnCloseRequested();
         SwitchToPopoverButton.Click += (_, _) => SwitchToPopoverRequested?.Invoke(this, EventArgs.Empty);
         DockButton.Click += (_, _) => ToggleDocked();
 
